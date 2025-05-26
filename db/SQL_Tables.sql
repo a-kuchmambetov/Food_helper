@@ -1,0 +1,128 @@
+-- Користувачі
+CREATE TABLE Users (
+    user_id SERIAL PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Категорії страв
+CREATE TABLE DishCategories (
+    category_id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
+-- Смаки
+CREATE TABLE Tastes (
+    taste_id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
+-- Страви
+CREATE TABLE Dishes (
+    dish_id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    complexity_level INTEGER,
+    preparation_time INTEGER,
+    category_id INTEGER REFERENCES DishCategories(category_id)
+        ON UPDATE CASCADE
+);
+
+-- Смаки страв
+CREATE TABLE DishTastes (
+    dish_id INTEGER NOT NULL REFERENCES Dishes(dish_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    taste_id INTEGER NOT NULL REFERENCES Tastes(taste_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    PRIMARY KEY (dish_id, taste_id)
+);
+
+-- Одиниці виміру
+CREATE TABLE MeasureUnits (
+    measure_unit_id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
+-- Інгредієнти
+CREATE TABLE Ingredients (
+    ingredient_id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    measure_unit_id INTEGER NOT NULL REFERENCES MeasureUnits(measure_unit_id)
+	    ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+-- Інгредієнти страви
+CREATE TABLE DishIngredients (
+    dish_id INTEGER NOT NULL REFERENCES Dishes(dish_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    ingredient_id INTEGER NOT NULL REFERENCES Ingredients(ingredient_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    quantity DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (dish_id, ingredient_id)
+);
+
+-- Рецепти
+CREATE TABLE Recipes (
+    recipe_id SERIAL PRIMARY KEY,
+    dish_id INTEGER NOT NULL REFERENCES Dishes(dish_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    instructions TEXT NOT NULL
+);
+
+-- Типи прийому їжі
+CREATE TABLE MealTypes (
+    meal_type_id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
+-- Заплановані страви
+CREATE TABLE PlanedDishes (
+    user_id INTEGER NOT NULL REFERENCES Users(user_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    dish_id INTEGER NOT NULL REFERENCES Dishes(dish_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    meal_type_id INTEGER NOT NULL REFERENCES MealTypes(meal_type_id)
+        ON UPDATE CASCADE,
+    date DATE NOT NULL,
+    PRIMARY KEY (user_id, dish_id, meal_type_id, date)
+);
+
+-- Інвентаризація інгредієнтів
+CREATE TABLE IngredientInventory (
+    user_id INTEGER NOT NULL REFERENCES Users(user_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    ingredient_id INTEGER NOT NULL REFERENCES Ingredients(ingredient_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    quantity DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (user_id, ingredient_id)
+);
+
+-- Валюти для цін
+CREATE TABLE Currency (
+    currency_id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
+-- Ціни інгредієнтів
+CREATE TABLE Prices (
+    price_id SERIAL PRIMARY KEY,
+    ingredient_id INTEGER NOT NULL REFERENCES Ingredients(ingredient_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    currency_id INTEGER NOT NULL REFERENCES Currency(currency_id)
+        ON UPDATE CASCADE,
+    price DECIMAL(10,2) NOT NULL,
+    last_updated DATE NOT NULL DEFAULT NOW()
+);
