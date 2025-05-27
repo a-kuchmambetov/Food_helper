@@ -63,7 +63,7 @@ function MultiDropdown({
         <ChevronDown className="w-5 h-5 text-zinc-300" />
       </button>
       {open && (
-        <div className="absolute left-0 mt-2 w-full min-w-35 bg-zinc-900 rounded-lg shadow-xl py-2 max-h-60 overflow-y-auto border border-neutral-800 custom-scrollbar p-1 space-y-1">
+        <div className="absolute z-10 left-0 mt-2 w-full min-w-35 bg-zinc-900 rounded-lg shadow-xl py-2 max-h-60 overflow-y-auto border border-neutral-800 custom-scrollbar p-1 space-y-1">
           {" "}
           {listValues.map((value) => (
             <div

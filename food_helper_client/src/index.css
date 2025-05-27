@@ -3,6 +3,10 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+html {
+  background-color: black;
+}
+
 * {
   font-family: "Inter", sans-serif;
 }

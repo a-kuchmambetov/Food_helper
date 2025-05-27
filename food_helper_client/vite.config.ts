@@ -5,9 +5,23 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  publicDir: "public", // Default: "public" - you can change this if needed
+
   server: {
     watch: {
       usePolling: true,
     },
+  },
+  preview: {
+    port: 4173,
+    strictPort: true,
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+    copyPublicDir: true, // Default: true
   },
 });

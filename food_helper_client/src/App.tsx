@@ -1,12 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import Catalog from "./pages/Catalog.tsx";
 import Profile from "./pages/Profile";
-import Auth from "./pages/Auth"; // Import the Auth component
+import Auth from "./pages/Auth";
 import { Settings02 } from "untitledui-js/react";
-
-// w/h 18 - 72px
-// w/h 11 - 44px
+import Footer from "./component/Footer.tsx";
 
 function App() {
   const [activeTab, setActiveTab] = useState("catalog");
@@ -21,7 +19,7 @@ function App() {
   const inactiveTabStyle = " text-gray-300";
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen bg-bg-primary text-white bg-gradient-to-br from-black to-slate-900">
       <nav className="bg-black text-white h-18 shadow-md px-4">
         <div className="container mx-auto h-full flex justify-between items-center">
           {/* Left side with page buttons */}
@@ -89,7 +87,9 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/auth" element={<Auth />} />
       </Routes>
-    </>
+
+      <Footer />
+    </div>
   );
 }
 
