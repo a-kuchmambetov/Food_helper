@@ -8,7 +8,7 @@ CREATE TABLE Users (
 );
 
 -- Категорії страв
-CREATE TABLE DishCategories (
+CREATE TABLE Categories (
     category_id SERIAL PRIMARY KEY,
     name TEXT UNIQUE NOT NULL
 );
@@ -24,9 +24,9 @@ CREATE TABLE Dishes (
     dish_id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
-    complexity_level INTEGER,
-    preparation_time INTEGER,
-    category_id INTEGER REFERENCES DishCategories(category_id)
+    cooking_difficulty INTEGER,
+    cooking_time INTEGER,
+    category_id INTEGER REFERENCES Categories(category_id)
         ON UPDATE CASCADE
 );
 
@@ -126,3 +126,22 @@ CREATE TABLE Prices (
     price DECIMAL(10,2) NOT NULL,
     last_updated DATE NOT NULL DEFAULT NOW()
 );
+
+-- SELECT 'TRUNCATE TABLE "' || tablename || '" RESTART IDENTITY CASCADE;'
+-- FROM pg_tables
+-- WHERE schemaname = 'public';
+
+-- TRUNCATE TABLE "categories" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "dishes" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "dishtastes" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "tastes" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "measureunits" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "ingredients" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "dishingredients" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "recipes" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "planeddishes" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "mealtypes" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "ingredientinventory" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "prices" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "currency" RESTART IDENTITY CASCADE;

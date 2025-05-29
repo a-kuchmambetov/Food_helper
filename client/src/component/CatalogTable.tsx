@@ -1,27 +1,30 @@
 import { useState } from "react";
 import SearchBar from "./CatalogTable/SearchBar";
 import MultiDropdown from "./CatalogTable/MultiDropdown";
+import Dropdown from "./CatalogTable/Dropdown";
 import Button from "./Button";
 import Table from "./CatalogTable/Table";
 
-// interface DataRowFromDB {
-//   recipeName: string;
-//   categories: string[];
-//   tastes: string[];
-//   cookingTime: number;
-//   cookingDifficulty: number;
-// }
+import type { CatalogData } from "../types/DbTypes.ts";
+import type { Filters } from "../types/Filters.ts";
 
-function CatalogTable() {
-  const [input, setInput] = useState({
-    recipeName: "",
-    categories: [] as string[],
-    tastes: [] as string[],
-    cookingTime: [] as string[],
-    cookingDifficulty: [] as string[],
-  });
+interface CatalogTableProps {
+  filters: Filters;
+  data: CatalogData[];
+  onClick?: () => void;
+}
+const defInput: Filters = {
+  dishName: "",
+  categories: [],
+  tastes: [],
+  cookingTime: 9999,
+  cookingDifficulty: [],
+};
 
-  const handleChangeSingle = (field: string, value: string) => {
+function CatalogTable({ filters, data, onClick }: CatalogTableProps) {
+  const [input, setInput] = useState(defInput);
+
+  const handleChangeSingle = (field: string, value: string | number) => {
     setInput((prev) => ({
       ...prev,
       [field]: value,
@@ -45,39 +48,45 @@ function CatalogTable() {
       </p>
       <div className="flex flex-row flex-nowrap max-sm:flex-wrap max-sm:justify-between max-sm:space-y-1 max-sm:space-x-2 items-end justify-start p-4 shadow-md rounded-t-lg border-2 border-zinc-700 space-x-4">
         <SearchBar
-          value={input.recipeName}
+          value={input.dishName}
           onChange={(value) => handleChangeSingle("recipeName", value)}
         />
         <MultiDropdown
           label={"Category"}
-          listValues={["Soup", "Dessert", "Main course", "Salad", "Snack"]}
+          listValues={filters.categories}
           values={input.categories}
           onChange={(value) => handleChangeMulti("categories", value)}
         />
         <MultiDropdown
           label="Taste"
-          listValues={["Sweet", "Sour", "Spicy", "Bitter", "Savory"]}
+          listValues={filters.tastes}
           values={input.tastes}
           onChange={(value) => handleChangeMulti("tastes", value)}
         />
-        <MultiDropdown
+        <Dropdown
           label="Cooking time"
-          listValues={["~15 min", "~30 min", "~45 min", "~60 min"]}
-          values={input.cookingTime}
-          onChange={(value) => handleChangeMulti("cookingTime", value)}
+          listValues={[
+            { label: "All", value: 9999 },
+            { label: "< 30 min", value: 30 },
+            { label: "< 60 min", value: 60 },
+            { label: "< 90 min", value: 90 },
+          ]}
+          value={input.cookingTime}
+          onChange={(value) => handleChangeSingle("cookingTime", value)}
         />
         <MultiDropdown
           label="Cooking difficulty"
           listValues={["Easy", "Medium", "Hard"]}
           values={input.cookingDifficulty}
           onChange={(value) => handleChangeMulti("cookingDifficulty", value)}
+          returnIndexes={true}
         />
         <div className="flex flex-row space-x-2 space-y-0 max-sm:space-x-2 max-sm:space-y-0 max-sm:flex-row max-md:flex-col max-md:space-x-0 max-md:space-y-1 max-md:mt-1 justify-end  max-md:flex-grow-0 flex-grow-1">
-          <Button label="Clear all" />
-          <Button label="Search" />
+          <Button label="Clear all" onClick={() => setInput(defInput)} />
+          <Button label="Search" onClick={onClick} />
         </div>
       </div>
-      <Table />
+      <Table data={data} />
     </div>
   );
 }

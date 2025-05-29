@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Routes, Route, Link } from "react-router-dom";
-import Catalog from "./pages/Catalog.tsx";
+import Catalog from "./pages/Catalog";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import { Settings02 } from "untitledui-js/react";
-import Footer from "./component/Footer.tsx";
+import Footer from "./component/Footer";
 
 function App() {
   const [activeTab, setActiveTab] = useState("catalog");

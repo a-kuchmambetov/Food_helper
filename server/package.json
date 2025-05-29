@@ -2,10 +2,10 @@
   "name": "food_helper_server",
   "version": "1.0.0",
   "description": "",
-  "main": "src/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon -L --watch src src/server.js"
+    "start": "node server.js",
+    "dev": "nodemon -L --watch server.js --watch modules server.js"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +16,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "food_helper": "file:..",
     "helmet": "^8.1.0",
     "morgan": "^1.10.0",
     "pg": "^8.16.0"

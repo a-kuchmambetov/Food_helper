@@ -3,15 +3,15 @@ import { ChevronDown } from "untitledui-js/react";
 
 interface Values {
   label: string;
-  listValues: string[];
-  value: string;
-  onChange: (value: string) => void;
+  listValues: { label: string; value: number }[];
+  value: number;
+  onChange: (value: number) => void;
 }
 
 function Dropdown({
   label = "",
   listValues = [],
-  value = "",
+  value = 0,
   onChange,
 }: Values) {
   const [open, setOpen] = useState<boolean>(false);
@@ -31,10 +31,12 @@ function Dropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelect = (value: string) => {
-    onChange(value);
+  const handleSelect = (val: number) => {
+    onChange(val);
+    setOpen(false);
   };
-  const displayValue = value;
+
+  const selected = listValues.find((item) => item.value === value);
 
   return (
     <div className="w-50 relative" ref={dropdownRef}>
@@ -47,22 +49,22 @@ function Dropdown({
         }`}
       >
         <span className="text-base text-white truncate text-left">
-          {displayValue}
+          {selected ? selected.label : ""}
         </span>
         <ChevronDown className="w-5 h-5 text-zinc-300" />
       </button>
       {open && (
         <div className="absolute left-0 mt-2 w-full bg-zinc-900 rounded-2xl shadow-xl py-2 max-h-60 overflow-y-auto border border-neutral-800 custom-scrollbar p-1 space-y-1">
-          {listValues.map((val) => (
+          {listValues.map((item) => (
             <div
-              key={val}
-              onClick={() => handleSelect(val)}
+              key={item.value}
+              onClick={() => handleSelect(item.value)}
               className={`
                 flex items-center px-4 py-2 cursor-pointer hover:bg-gray-800 rounded-xl transition
-                ${val === value ? "bg-neutral-800" : ""}
+                ${item.value === value ? "bg-neutral-800" : ""}
               `}
             >
-              <span className="font-medium text-white">{val}</span>
+              <span className="font-medium text-white">{item.label}</span>
             </div>
           ))}
         </div>
