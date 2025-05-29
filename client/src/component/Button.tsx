@@ -1,6 +1,6 @@
 interface ButtonProps {
   label: string;
-  onClick?: () => void;
+  onClick?: (...args: never) => void;
 }
 
 function Button({ label = "", onClick }: ButtonProps) {

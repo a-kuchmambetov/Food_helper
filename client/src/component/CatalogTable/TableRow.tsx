@@ -1,4 +1,5 @@
 import type { CatalogData } from "../../types/DbTypes";
+import { v4 as uuidv4 } from "uuid";
 import Badge from "./Badge";
 
 interface TableRowProps {
@@ -15,22 +16,25 @@ function TableRow({ data }: TableRowProps) {
       </td>
       <td className={tdStyle}>
         <div className="flex flex-wrap gap-x-2 gap-y-2">
-          {data.categories.map((e) => (
-            <Badge text={e} />
+          {""}
+          {data?.categories.map((e) => (
+            <Badge key={uuidv4()} text={e} />
           ))}
         </div>
       </td>
       <td className={tdStyle}>
         <div className="flex flex-wrap gap-x-2 gap-y-2">
-          {data.tastes.map((e) => (
-            <Badge text={e} />
+          {""}
+          {data?.tastes.map((e) => (
+            <Badge key={uuidv4()} text={e} />
           ))}
         </div>
       </td>
       <td className={tdStyle}>{data.cookingTime} min</td>
       <td className={tdStyle}>
+        {""}
         {[1, 2, 3].map((i) =>
-          i <= data.cookingDifficulty ? (
+          i <= data?.cookingDifficulty ? (
             <span key={i} className="text-yellow-400">
               ★
             </span>

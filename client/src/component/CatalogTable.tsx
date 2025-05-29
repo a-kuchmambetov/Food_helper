@@ -11,7 +11,7 @@ import type { Filters } from "../types/Filters.ts";
 interface CatalogTableProps {
   filters: Filters;
   data: CatalogData[];
-  onClick?: () => void;
+  onClick: (userFilters: Filters) => void;
 }
 const defInput: Filters = {
   dishName: "",
@@ -31,7 +31,7 @@ function CatalogTable({ filters, data, onClick }: CatalogTableProps) {
     }));
   };
 
-  const handleChangeMulti = (field: string, value: string[]) => {
+  const handleChangeMulti = (field: string, value: (string | number)[]) => {
     setInput((prev) => ({
       ...prev,
       [field]: value,
@@ -53,13 +53,19 @@ function CatalogTable({ filters, data, onClick }: CatalogTableProps) {
         />
         <MultiDropdown
           label={"Category"}
-          listValues={filters.categories}
+          listValues={(filters.categories ?? []).map((e) => ({
+            label: e,
+            value: e,
+          }))}
           values={input.categories}
           onChange={(value) => handleChangeMulti("categories", value)}
         />
         <MultiDropdown
           label="Taste"
-          listValues={filters.tastes}
+          listValues={(filters.tastes ?? []).map((e) => ({
+            label: e,
+            value: e,
+          }))}
           values={input.tastes}
           onChange={(value) => handleChangeMulti("tastes", value)}
         />
@@ -76,14 +82,17 @@ function CatalogTable({ filters, data, onClick }: CatalogTableProps) {
         />
         <MultiDropdown
           label="Cooking difficulty"
-          listValues={["Easy", "Medium", "Hard"]}
+          listValues={[
+            { label: "Easy", value: 1 },
+            { label: "Medium", value: 2 },
+            { label: "Hard", value: 3 },
+          ]}
           values={input.cookingDifficulty}
           onChange={(value) => handleChangeMulti("cookingDifficulty", value)}
-          returnIndexes={true}
         />
         <div className="flex flex-row space-x-2 space-y-0 max-sm:space-x-2 max-sm:space-y-0 max-sm:flex-row max-md:flex-col max-md:space-x-0 max-md:space-y-1 max-md:mt-1 justify-end  max-md:flex-grow-0 flex-grow-1">
           <Button label="Clear all" onClick={() => setInput(defInput)} />
-          <Button label="Search" onClick={onClick} />
+          <Button label="Search" onClick={() => onClick(input)} />
         </div>
       </div>
       <Table data={data} />

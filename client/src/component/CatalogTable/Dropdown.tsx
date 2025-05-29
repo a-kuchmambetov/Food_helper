@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "untitledui-js/react";
 
-interface Values {
+interface DropdownProps {
   label: string;
   listValues: { label: string; value: number }[];
   value: number;
@@ -13,7 +13,7 @@ function Dropdown({
   listValues = [],
   value = 0,
   onChange,
-}: Values) {
+}: DropdownProps) {
   const [open, setOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +33,7 @@ function Dropdown({
 
   const handleSelect = (val: number) => {
     onChange(val);
-    setOpen(false);
+    // setOpen(false);
   };
 
   const selected = listValues.find((item) => item.value === value);

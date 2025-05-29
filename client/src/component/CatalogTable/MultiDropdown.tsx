@@ -1,11 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "untitledui-js/react";
 
-interface Values {
+interface DropdownOption {
   label: string;
-  listValues: string[];
-  values: string[];
-  onChange: (value: string[]) => void;
+  value: string | number;
+}
+
+interface MultiDropdownProps {
+  label: string;
+  listValues: DropdownOption[];
+  values: (string | number)[];
+  onChange: (value: (string | number)[]) => void;
 }
 
 function MultiDropdown({
@@ -13,7 +18,7 @@ function MultiDropdown({
   listValues = [],
   values = [],
   onChange,
-}: Values) {
+}: MultiDropdownProps) {
   const [open, setOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -31,12 +36,12 @@ function MultiDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelect = (name: string) => {
-    let newSelected: string[];
-    if (values.includes(name)) {
-      newSelected = values.filter((n) => n !== name);
+  const handleSelect = (label: string | number) => {
+    let newSelected: (string | number)[];
+    if (values.includes(label)) {
+      newSelected = values.filter((n) => n !== label);
     } else {
-      newSelected = [...values, name];
+      newSelected = [...values, label];
     }
     onChange(newSelected);
   };
@@ -44,7 +49,7 @@ function MultiDropdown({
     values.length === 0 || values.length === listValues.length
       ? "All"
       : values.length === 1
-      ? listValues.find((e) => e === values[0])
+      ? listValues.find((e) => e.value === values[0])?.label
       : `${values.length} selected`;
 
   return (
@@ -64,25 +69,24 @@ function MultiDropdown({
       </button>
       {open && (
         <div className="absolute z-10 left-0 mt-2 w-full min-w-35 bg-zinc-900 rounded-lg shadow-xl py-2 max-h-60 overflow-y-auto border border-neutral-800 custom-scrollbar p-1 space-y-1">
-          {" "}
-          {listValues.map((value) => (
+          {listValues.map((item) => (
             <div
-              key={value}
-              onClick={() => handleSelect(value)}
+              key={item.value}
+              onClick={() => handleSelect(item.value)}
               className={`flex items-center px-4 py-2 cursor-pointer hover:bg-bg-active rounded-lg transition
-                ${values.includes(value) ? "bg-gray-700" : ""}`}
+                ${values.includes(item.value) ? "bg-gray-700" : ""}`}
             >
-              {values.includes(value) && (
+              {values.includes(item.value) && (
                 <input
                   type="checkbox"
-                  checked={values.includes(value)}
+                  checked={values.includes(item.value)}
                   readOnly
                   className="accent-purple-400 mr-2"
                   tabIndex={-1}
-                  aria-label={`Select ${value}`}
+                  aria-label={`Select ${item.label}`}
                 />
               )}
-              <span className="font-medium text-white">{value}</span>
+              <span className="font-medium text-white">{item.label}</span>
             </div>
           ))}
         </div>

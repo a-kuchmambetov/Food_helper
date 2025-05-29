@@ -43,12 +43,12 @@ async function getFilters(req, res) {
 async function getDishesByFilters(req, res) {
   try {
     const { page = 0, elements = 0 } = req?.query;
+    console.log(req.body, page, elements);
     const result = await recipesService.getDishesByFilters(
       req.body,
       page,
       elements
     );
-
     res.status(200).json(result);
   } catch (error) {
     console.error("Error getting filter:", error);

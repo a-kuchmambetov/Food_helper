@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import CatalogTable from "../component/CatalogTable";
-import Button from "../component/Button";
 
 import type { CatalogData } from "../types/DbTypes";
 import type { Filters } from "../types/Filters";
 
 const API_URL = import.meta.env.VITE_API_URL;
+
+function FixUserFilters(srcFilters: Filters, userFilters: Filters): Filters {
+  if (srcFilters.tastes.length === userFilters.tastes.length)
+    userFilters.tastes = [];
+  return userFilters;
+}
 
 async function GetFiltersFromDB(): Promise<Filters> {
   return axios({
@@ -50,11 +55,12 @@ async function GetCatalogDataWithFilters(
   page = 1 as number,
   elements = 6 as number
 ): Promise<CatalogData[]> {
+  console.log("Fetching catalog data with filters:", filters, page, elements);
   return axios({
     method: "post",
-    url: API_URL + "/dishes/filtered",
+    url: API_URL + "/dishes/filters",
     data: {
-      filters: filters,
+      ...filters,
     },
     params: {
       page: page,
@@ -85,10 +91,14 @@ function Catalog() {
 
   async function fetchCatalogDataWithFilters(
     input: Filters,
-    page: number,
-    elements: number
+    page: number = 1,
+    elements: number = 6
   ) {
-    const data = await GetCatalogDataWithFilters(input, page, elements);
+    const data = await GetCatalogDataWithFilters(
+      FixUserFilters(filters, input),
+      page,
+      elements
+    );
     setCatalogData(data);
     console.log("Catalog data updated:", catalogData);
   }
@@ -98,9 +108,10 @@ function Catalog() {
       <CatalogTable
         filters={filters}
         data={catalogData}
-        onClick={(input, page, elements) => fetchCatalogDataWithFilters()}
+        onClick={(userFilters: Filters) =>
+          fetchCatalogDataWithFilters(userFilters)
+        }
       />
-      <Button label="Refresh Catalog" onClick={fetchCatalogDataWithFilters} />
     </div>
   );
 }
