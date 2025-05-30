@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import Catalog from "./pages/Catalog";
+import Dish from "./pages/Dish";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import { Settings02 } from "untitledui-js/react";
@@ -49,7 +50,7 @@ function App() {
                 Planner
               </Link>
               <Link
-                to="/auth"
+                to="/inventory"
                 onClick={() => handleTabClick("inventory")}
                 className={
                   commontabStyle +
@@ -61,7 +62,7 @@ function App() {
                 Inventory
               </Link>
               <Link
-                to="/auth"
+                to="/help"
                 onClick={() => handleTabClick("help")}
                 className={
                   commontabStyle +
@@ -84,8 +85,11 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Catalog />} />
+        <Route path="/dish/:id" element={<Dish />} />
+
         <Route path="/profile" element={<Profile />} />
-        <Route path="/auth" element={<Auth />} />
+        <Route path="/inventory" element={<Auth />} />
+        <Route path="/help" element={<Auth />} />
       </Routes>
 
       <Footer />

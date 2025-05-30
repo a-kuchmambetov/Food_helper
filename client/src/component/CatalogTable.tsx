@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SearchBar from "./CatalogTable/SearchBar";
 import MultiDropdown from "./CatalogTable/MultiDropdown";
 import Dropdown from "./CatalogTable/Dropdown";
@@ -21,18 +21,27 @@ const defInput: Filters = {
   cookingDifficulty: [],
 };
 
+const FILTERS_STORAGE_KEY = "catalog_filters";
+
 function CatalogTable({ filters, data, onClick }: CatalogTableProps) {
-  const [input, setInput] = useState(defInput);
+  const [input, setInput] = useState(() => {
+    const saved = localStorage.getItem(FILTERS_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : defInput;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(input));
+  }, [input]);
 
   const handleChangeSingle = (field: string, value: string | number) => {
-    setInput((prev) => ({
+    setInput((prev: Filters) => ({
       ...prev,
       [field]: value,
     }));
   };
 
   const handleChangeMulti = (field: string, value: (string | number)[]) => {
-    setInput((prev) => ({
+    setInput((prev: Filters) => ({
       ...prev,
       [field]: value,
     }));
@@ -49,7 +58,7 @@ function CatalogTable({ filters, data, onClick }: CatalogTableProps) {
       <div className="flex flex-row flex-nowrap max-sm:flex-wrap max-sm:justify-between max-sm:space-y-1 max-sm:space-x-2 items-end justify-start p-4 shadow-md rounded-t-lg border-2 border-zinc-700 space-x-4">
         <SearchBar
           value={input.dishName}
-          onChange={(value) => handleChangeSingle("recipeName", value)}
+          onChange={(value) => handleChangeSingle("dishName", value)}
         />
         <MultiDropdown
           label={"Category"}
@@ -91,7 +100,13 @@ function CatalogTable({ filters, data, onClick }: CatalogTableProps) {
           onChange={(value) => handleChangeMulti("cookingDifficulty", value)}
         />
         <div className="flex flex-row space-x-2 space-y-0 max-sm:space-x-2 max-sm:space-y-0 max-sm:flex-row max-md:flex-col max-md:space-x-0 max-md:space-y-1 max-md:mt-1 justify-end  max-md:flex-grow-0 flex-grow-1">
-          <Button label="Clear all" onClick={() => setInput(defInput)} />
+          <Button
+            label="Clear all"
+            onClick={() => {
+              setInput(defInput);
+              onClick(defInput);
+            }}
+          />
           <Button label="Search" onClick={() => onClick(input)} />
         </div>
       </div>

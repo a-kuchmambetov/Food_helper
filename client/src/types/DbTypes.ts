@@ -7,3 +7,8 @@ export interface CatalogData {
   cookingTime: number;
   cookingDifficulty: number;
 }
+
+export interface DishData extends CatalogData {
+  recipe: string;
+  ingredients: { name: string; quantity: number }[];
+}

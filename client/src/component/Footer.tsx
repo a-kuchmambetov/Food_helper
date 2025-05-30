@@ -1,7 +1,7 @@
 function Footer() {
   return (
     <footer className="flex items-center w-full justify-center mt-auto">
-      <div className="container border-t-2 border-zinc-900 py-12 flex flex-row justify-between items-center">
+      <div className="container border-t-0 border-zinc-900 py-12 flex flex-row justify-between items-center">
         <div className="flex flex-row items-center space-x-4">
           <a
             href="https://www.linkedin.com/in/artem-kuchmambetov-b60ab220a/"

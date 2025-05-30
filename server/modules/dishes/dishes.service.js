@@ -11,6 +11,37 @@ async function getAllDishes() {
   }
 }
 
+async function getDishesById(id) {
+  try {
+    const result = await db.query(
+      `SELECT 
+        d.dish_id AS id,
+        d.name,
+        d.description,
+        ARRAY_AGG(DISTINCT c.name) AS categories,
+        ARRAY_AGG(DISTINCT t.name) AS tastes,
+        d.cooking_time AS "cookingTime",
+        d.cooking_difficulty AS "cookingDifficulty", 
+        r.instructions AS "recipe", 
+        ARRAY_AGG(DISTINCT jsonb_build_object('name', i.name, 'quantity', di.quantity)) AS ingredients
+      FROM dishes d
+      LEFT JOIN categories c ON d.category_id = c.category_id
+      LEFT JOIN dishtastes dt ON d.dish_id = dt.dish_id
+      LEFT JOIN tastes t ON dt.taste_id = t.taste_id
+      LEFT JOIN recipes r ON d.dish_id = r.dish_id
+      LEFT JOIN dishingredients di ON d.dish_id = di.dish_id
+      LEFT JOIN ingredients i ON di.ingredient_id = i.ingredient_id
+      WHERE d.dish_id = $1
+      GROUP BY d.dish_id, r.instructions;`,
+      [id]
+    );
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error fetching dish by ID:", error);
+    throw new Error("Database query failed");
+  }
+}
+
 async function getDishesLimited(page = 1, elements = 7) {
   try {
     const result = await db.query(
@@ -117,6 +148,7 @@ async function getDishesByFilters(filters, page = 0, elements = 0) {
 export default {
   getAllDishes,
   getDishesLimited,
+  getDishById: getDishesById,
   getFilters,
   getDishesByFilters,
 };

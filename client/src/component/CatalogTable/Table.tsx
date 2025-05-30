@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import type { CatalogData } from "../../types/DbTypes";
 import TableRow from "./TableRow";
 
@@ -5,7 +6,16 @@ interface TableProps {
   data: Array<CatalogData>;
 }
 
+const maxNumOfEmptyRows = 6;
+
 function Table({ data }: TableProps) {
+  // Inside your component:
+  const navigate = useNavigate();
+
+  function goToDishPage(dishId: number) {
+    navigate(`/dish/${dishId}`);
+  }
+
   return (
     <table className="w-full text-left">
       <thead>
@@ -20,9 +30,27 @@ function Table({ data }: TableProps) {
         </tr>
       </thead>
       <tbody>
-        {data.length > 0 && data.map((e) => <TableRow key={e.id} data={e} />)}
+        {data.length > 0 &&
+          data.map((e) => (
+            <TableRow key={e.id} data={e} onClick={() => goToDishPage(e.id)} />
+          ))}
+        {data.length === 0 && (
+          <tr key={`empty-row-0`} className="border-2 border-zinc-700">
+            <td
+              colSpan={5}
+              className="px-6 py-10 font-medium text-base text-gray-200 text-center"
+            >
+              No dishes found. Please try changing the filters or other name.
+            </td>
+          </tr>
+        )}
+
         {(data.length < 6 || data === null) &&
-          Array.from({ length: 6 - data.length }).map((_, idx) => (
+          Array.from({
+            length:
+              (data.length === 0 ? maxNumOfEmptyRows - 1 : maxNumOfEmptyRows) -
+              data.length,
+          }).map((_, idx) => (
             <tr key={`empty-row-${idx}`} className="border-2 border-zinc-700">
               <td
                 colSpan={5}

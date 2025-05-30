@@ -21,13 +21,13 @@ app.get("/", (req, res) => {
   res.json({ message: "API is running!" });
 });
 
-import recipesRoutes from "./modules/recipes/recipes.routes.js";
+import recipesRoutes from "./modules/dishes/dishes.routes.js";
 app.use(recipesRoutes);
 
 // Server setup
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(
-    `🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
+    `\n🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}\n`
   );
 });

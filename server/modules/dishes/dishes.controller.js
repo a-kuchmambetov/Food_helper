@@ -1,12 +1,26 @@
-import recipesService from "./recipes.service.js";
+import dishesService from "./dishes.service.js";
 
 // Get /dishes
 async function getAllDishes(req, res) {
   try {
-    const dishes = await recipesService.getAllDishes();
+    const dishes = await dishesService.getAllDishes();
     res.status(200).json(dishes);
   } catch (error) {
     console.error("Error getting all dishes:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+// Get dishes by id
+async function getDishById(req, res) {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: "Dish ID is required" });
+    }
+    const dishes = await dishesService.getDishById(id);
+    res.status(200).json(dishes);
+  } catch (error) {
+    console.error("Error getting dish by ID:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
@@ -14,7 +28,7 @@ async function getAllDishes(req, res) {
 async function getDishesLimited(req, res) {
   try {
     const { page = 1, elements = 7 } = req.query;
-    const dishes = await recipesService.getDishesLimited(page, elements);
+    const dishes = await dishesService.getDishesLimited(page, elements);
     res.status(200).json(dishes);
   } catch (error) {
     console.error("Error getting all dishes:", error);
@@ -25,7 +39,7 @@ async function getDishesLimited(req, res) {
 // Get the "filters" from the database to be used in the frontend
 async function getFilters(req, res) {
   try {
-    const filters = await recipesService.getFilters();
+    const filters = await dishesService.getFilters();
     const { categories, tastes } = filters;
     const result = {
       categories: categories.map((category) => category.name),
@@ -44,7 +58,7 @@ async function getDishesByFilters(req, res) {
   try {
     const { page = 0, elements = 0 } = req?.query;
     console.log(req.body, page, elements);
-    const result = await recipesService.getDishesByFilters(
+    const result = await dishesService.getDishesByFilters(
       req.body,
       page,
       elements
@@ -58,6 +72,7 @@ async function getDishesByFilters(req, res) {
 
 export default {
   getAllDishes,
+  getDishById,
   getDishesLimited,
   getFilters,
   getDishesByFilters,
