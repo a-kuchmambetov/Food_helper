@@ -12,14 +12,13 @@
   },
   "author": "Kuchmambetov Artem",
   "scripts": {
-    "install-all": "npm --prefix client install && npm --prefix server install",
+    "install-all": "npm i && npm --prefix client install && npm --prefix server install",
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "npm --prefix client run dev",
     "dev:server": "npm --prefix server run dev",
-    "build": "npm run build:client && npm run build:server",
+    "build": "npm run build:client",
     "build:client": "npm --prefix client run build",
-    "build:server": "npm --prefix server run build",
-    "start": "npm run build && npm --prefix server start"
+    "start": "npm run build && concurrently \" npm --prefix server start\" \"npm --prefix client start\""
   },
   "devDependencies": {
     "concurrently": "^8.2.0"

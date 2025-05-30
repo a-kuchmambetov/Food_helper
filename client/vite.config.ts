@@ -8,6 +8,7 @@ export default defineConfig({
   publicDir: "public", // Default: "public"
 
   server: {
+    allowedHosts: ["food_helper.kuchmambetov.dev"],
     watch: {
       usePolling: true,
     },
