@@ -6,9 +6,14 @@ import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import { Settings02 } from "untitledui-js/react";
 import Footer from "./component/Footer";
+import { useLocation } from "react-router-dom";
 
 function App() {
-  const [activeTab, setActiveTab] = useState("catalog");
+  const location = useLocation();
+  console.log("Current location:", location.pathname);
+  const [activeTab, setActiveTab] = useState(
+    location.pathname.replace("/", "") || "catalog"
+  );
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
   };
@@ -31,7 +36,7 @@ function App() {
             <div className="h-11 flex flex-row items-center space-x-1">
               <Link
                 onClick={() => handleTabClick("catalog")}
-                to="/"
+                to="/catalog"
                 className={
                   commontabStyle +
                   (activeTab === "catalog" ? activeTabStyle : inactiveTabStyle)
@@ -40,7 +45,7 @@ function App() {
                 Catalog
               </Link>
               <Link
-                to="/profile"
+                to="/planner"
                 onClick={() => handleTabClick("planner")}
                 className={
                   commontabStyle +
@@ -84,10 +89,10 @@ function App() {
       </nav>
 
       <Routes>
-        <Route path="/" element={<Catalog />} />
+        <Route path="/catalog" element={<Catalog />} />
         <Route path="/dish/:id" element={<Dish />} />
 
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/planner" element={<Profile />} />
         <Route path="/inventory" element={<Auth />} />
         <Route path="/help" element={<Auth />} />
       </Routes>

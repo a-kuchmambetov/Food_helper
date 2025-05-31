@@ -35,7 +35,7 @@ function Dish() {
   }, [id]);
 
   function goToDishPage() {
-    navigate(`/`);
+    navigate(`/catalog`);
   }
 
   return (
@@ -87,7 +87,7 @@ function Dish() {
                     }
                   >
                     {line}
-                    <br />
+                    {index > 0 && <br />}
                   </span>
                 ))}
           </div>

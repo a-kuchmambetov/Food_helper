@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "npx live-server dist",
+    "start": "npx live-server dist --port=5173 --entry-file=index.html",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
