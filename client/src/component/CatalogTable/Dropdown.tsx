@@ -60,8 +60,8 @@ function Dropdown({
               key={item.value}
               onClick={() => handleSelect(item.value)}
               className={`
-                flex items-center px-4 py-2 cursor-pointer hover:bg-gray-800 rounded-xl transition
-                ${item.value === value ? "bg-neutral-800" : ""}
+                flex items-center px-4 py-2 cursor-pointer hover:bg-bg-active rounded-xl transition
+                ${item.value === value ? "bg-gray-700" : ""}
               `}
             >
               <span className="font-medium text-white">{item.label}</span>

@@ -21,16 +21,17 @@ const defInput: Filters = {
   cookingDifficulty: [],
 };
 
-const FILTERS_STORAGE_KEY = "catalog_filters";
+const USERFILTERS_STORAGE_KEY = "user_filters";
 
 function CatalogTable({ filters, data, onClick }: CatalogTableProps) {
   const [input, setInput] = useState(() => {
-    const saved = localStorage.getItem(FILTERS_STORAGE_KEY);
+    const saved = localStorage.getItem(USERFILTERS_STORAGE_KEY);
     return saved ? JSON.parse(saved) : defInput;
   });
 
   useEffect(() => {
-    localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(input));
+    localStorage.setItem(USERFILTERS_STORAGE_KEY, JSON.stringify(input));
+    onClick(input);
   }, [input]);
 
   const handleChangeSingle = (field: string, value: string | number) => {

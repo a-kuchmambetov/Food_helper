@@ -8,6 +8,11 @@ export interface CatalogData {
   cookingDifficulty: number;
 }
 
+export interface FilteredCatalogData {
+  totalCount: number;
+  data: CatalogData[];
+}
+
 export interface DishData extends CatalogData {
   recipe: string;
   ingredients: { name: string; quantity: number }[];

@@ -16,7 +16,9 @@ function TableRow({ data, onClick }: TableRowProps) {
     >
       <td className={tdStyle + " flex flex-col"}>
         {data.name}
-        <p className="pt-1 text-sm text-gray-300">{data.description}</p>
+        <p className="pt-1 text-sm text-gray-300 truncate">
+          {data.description}
+        </p>
       </td>
       <td className={tdStyle}>
         <div className="flex flex-wrap gap-x-2 gap-y-2">

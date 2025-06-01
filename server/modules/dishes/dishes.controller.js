@@ -51,17 +51,17 @@ async function getFilters(req, res) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
-
 // Post /dishes/filters
-// Get dishes by filters
+// Post filters to get all matched dishes
 async function getDishesByFilters(req, res) {
   try {
-    const { page = 0, elements = 0 } = req?.query;
-    console.log(req.body, page, elements);
+    const { page = 0, elements = 0, includeCount = false } = req?.query;
+    console.log(req.body, page, elements, includeCount);
     const result = await dishesService.getDishesByFilters(
       req.body,
       page,
-      elements
+      elements,
+      includeCount === "true" ? true : false
     );
     res.status(200).json(result);
   } catch (error) {

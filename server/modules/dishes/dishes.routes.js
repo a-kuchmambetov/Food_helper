@@ -13,7 +13,7 @@ router.get("/dishes/limited", dishesController.getDishesLimited);
 // Get a list of filters (categories and tastes)
 router.get("/dishes/filters", dishesController.getFilters);
 
-// Get all dishes by filters
+// Post filters to get all matched dishes
 router.post("/dishes/filters", dishesController.getDishesByFilters);
 
 export default router;

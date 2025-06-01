@@ -100,48 +100,69 @@ async function getFilters() {
   }
 }
 
-async function getDishesByFilters(filters, page = 0, elements = 0) {
-  let query = `
-  SELECT 
-    d.dish_id AS id,
-    d.name,
-    d.description,
-    ARRAY_AGG(DISTINCT c.name) AS categories,
-    ARRAY_AGG(DISTINCT t.name) AS tastes,
-    d.cooking_time AS "cookingTime",
-    d.cooking_difficulty AS "cookingDifficulty"
-  FROM dishes d
-  LEFT JOIN categories c ON d.category_id = c.category_id
-  LEFT JOIN dishtastes dt ON d.dish_id = dt.dish_id
-  LEFT JOIN tastes t ON dt.taste_id = t.taste_id
-  WHERE 1=1
-    AND d.name ILIKE '%' || $1 || '%'
-    AND (array_length($2::text[], 1) IS NULL OR c.name = ANY($2))
-    AND (array_length($3::text[], 1) IS NULL OR t.name = ANY($3))
-    AND d.cooking_time <= $4
-    AND (array_length($5::int[], 1) IS NULL OR d.cooking_difficulty = ANY($5)) 
-  GROUP BY d.dish_id`;
-  try {
-    const params = Object.values(filters);
+async function getDishesByFilters(
+  filters,
+  page = 1,
+  elements = 10,
+  includeCount = false
+) {
+  // Creating request params WHERE/GROUP BY/HAVING (to avoid SQL injection)
+  const baseParams = [
+    filters.dishName || "",
+    filters.categories?.length > 0 ? filters.categories : null,
+    filters.tastes?.length > 0 ? filters.tastes : null,
+    filters.cookingTime ?? 9999,
+    filters.cookingDifficulty?.length > 0 ? filters.cookingDifficulty : null,
+  ];
 
-    // Add HAVING clause right after GROUP BY
-    if (filters?.tastes.length > 0) {
-      query += `\nHAVING COUNT(DISTINCT t.name) = ${filters.tastes.length}`;
+  // If we need number of dishes adding SELECT COUNT(*) OVER()
+  const countSqlPart = includeCount ? `COUNT(*) OVER() AS total_count,` : "";
+
+  const query = `
+    SELECT
+      ${countSqlPart}
+      d.dish_id   AS id,
+      d.name,
+      d.description,
+      ARRAY_AGG(DISTINCT c.name) AS categories,
+      ARRAY_AGG(DISTINCT t.name) AS tastes,
+      d.cooking_time       AS "cookingTime",
+      d.cooking_difficulty AS "cookingDifficulty"
+    FROM dishes d
+    LEFT JOIN categories c  ON d.category_id = c.category_id
+    LEFT JOIN dishtastes dt ON d.dish_id = dt.dish_id
+    LEFT JOIN tastes t      ON dt.taste_id = t.taste_id
+    WHERE 1=1
+      AND d.name ILIKE '%' || $1 || '%'
+      AND (array_length($2::text[],1) IS NULL OR c.name = ANY($2))
+      AND (array_length($3::text[],1) IS NULL OR t.name = ANY($3))
+      AND d.cooking_time <= $4
+      AND (array_length($5::int[],1) IS NULL OR d.cooking_difficulty = ANY($5))
+    GROUP BY d.dish_id
+    ${
+      filters.tastes?.length > 0
+        ? "HAVING COUNT(DISTINCT t.name) = array_length($3::text[],1)"
+        : ""
     }
+    ORDER BY d.dish_id
+    LIMIT  $6 OFFSET $7;
+  `;
 
-    // Add ORDER BY, LIMIT, OFFSET after HAVING
-    if (page > 0 && elements > 0) {
-      query += `\nORDER BY d.dish_id LIMIT ${elements} OFFSET ${
-        (page - 1) * elements
-      };`;
-    }
+  const params = baseParams.concat([elements, (page - 1) * elements]);
 
-    const result = await db.query(query, params);
-
-    return result.rows;
-  } catch (error) {
-    console.error("Error fetching dishes by filters:", error);
-    throw new Error("Database query failed");
+  const result = await db.query(query, params);
+  // If includeCount = true, each row will have total_count
+  if (includeCount) {
+    const totalCount =
+      result.rowCount === 0 ? 0 : parseInt(result.rows[0].total_count, 10);
+    // Deleting total_count from EACH row
+    const dishes = result.rows.map((r) => {
+      const { total_count, ...rest } = r;
+      return rest;
+    });
+    return { totalCount, dishes };
+  } else {
+    return { dishes: result.rows };
   }
 }
 

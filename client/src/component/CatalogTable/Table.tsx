@@ -17,14 +17,20 @@ function Table({ data }: TableProps) {
   }
 
   return (
-    <table className="w-full text-left">
+    <table className="table-fixed w-full border-collapse text-left">
       <thead>
         <tr className="border-t-0 border-2 border-zinc-700 text-nowrap max-md:text-wrap">
           <th className="px-6 py-3 text-sm text-zinc-400">Dish name</th>
-          <th className="px-6 py-3 text-sm text-zinc-400">Category</th>
-          <th className="px-6 py-3 text-sm text-zinc-400">Taste</th>
-          <th className="px-6 py-3 text-sm text-zinc-400">Cooking time</th>
-          <th className="px-6 py-3 text-sm text-zinc-400">
+          <th className="w-[10%] max-md:w-[20%] px-6 py-3 text-sm text-zinc-400">
+            Category
+          </th>
+          <th className="w-[25%] max-md:w-[12.5%] px-6 py-3 text-sm text-zinc-400">
+            Taste
+          </th>
+          <th className="w-[12.5%] max-sm:w-[20%] px-6 py-3 text-sm text-zinc-400 text-center text-wrap">
+            Cooking time
+          </th>
+          <th className="w-[12.5%] max-sm:w-[17.5%] px-6 py-3 text-sm text-zinc-400 text-center text-wrap">
             Cooking difficulty
           </th>
         </tr>
@@ -54,7 +60,7 @@ function Table({ data }: TableProps) {
             <tr key={`empty-row-${idx}`} className="border-2 border-zinc-700">
               <td
                 colSpan={5}
-                className="px-6 py-12  font-medium leading-tight text-sm text-white"
+                className="px-6 py-11 h-[91.5px] font-medium leading-tight text-sm text-white"
               />
             </tr>
           ))}
