@@ -4,6 +4,9 @@ import cors from "cors";
 import morgan from "morgan";
 import passport from "passport";
 import cookieParser from "cookie-parser";
+import fs from "fs";
+import https from "https";
+import selfsigned from "selfsigned";
 
 // Import security middleware
 import {
@@ -16,6 +19,7 @@ import {
   preventParameterPollution,
 } from "./middleware/security.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import authService from "./modules/auth/auth.service.js";
 
 dotenv.config();
 const app = express();
@@ -69,7 +73,6 @@ app.get("/health", (req, res) => {
 // Import and use routes
 import authRoutes from "./modules/auth/auth.routes.js";
 import dishesRoutes from "./modules/dishes/dishes.routes.js";
-import authService from "./modules/auth/auth.service.js";
 
 // API routes
 app.use(authRoutes);
@@ -81,20 +84,50 @@ app.use(notFoundHandler);
 // Global error handler (must be last)
 app.use(errorHandler);
 
-// Server setup
+// Server setup (replaced to support HTTPS)
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(
-    `\n🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}\n`
-  );
-  // Schedule cleanup of expired tokens and sessions
-  // Run cleanup immediately on startup
-  authService.cleanupExpiredTokens().catch(console.error);
+const HOST = process.env.HOST || "0.0.0.0";
+const sslKeyPath = process.env.SSL_KEY_PATH;
+const sslCertPath = process.env.SSL_CERT_PATH;
 
-  // Run cleanup every 24 hours (86400000 ms)
-  setInterval(() => {
-    authService.cleanupExpiredTokens().catch(console.error);
-  }, 24 * 60 * 60 * 1000);
+// Determine SSL options (env paths or self-signed for Cloudflare proxy)
+let serverOptions;
+if (sslKeyPath && sslCertPath) {
+  serverOptions = {
+    key: fs.readFileSync(sslKeyPath),
+    cert: fs.readFileSync(sslCertPath),
+  };
+} else if (process.env.CF_PROXY === "true") {
+  // Generate a temporary self-signed certificate
+  const attrs = [{ name: "commonName", value: process.env.HOST }];
+  const pems = selfsigned.generate(attrs, { days: 365 });
+  serverOptions = {
+    key: pems.private,
+    cert: pems.cert,
+  };
+} // else serverOptions remains undefined for plain HTTP
 
-  console.log("📅 Session cleanup scheduled to run every 24 hours");
-});
+// Unified server start function
+const startServer = (serverInstance, protocol) => {
+  serverInstance.listen(PORT, HOST, async () => {
+    console.log(
+      `🚀 ${protocol.toUpperCase()} Server running in ${
+        process.env.NODE_ENV
+      } mode on ${protocol}://${HOST}:${PORT}`
+    );
+    // Schedule cleanup of expired tokens and sessions
+    await authService.cleanupExpiredTokens().catch(console.error);
+    setInterval(
+      () => authService.cleanupExpiredTokens().catch(console.error),
+      24 * 60 * 60 * 1000
+    );
+    console.log("📅 Session cleanup scheduled to run every 24 hours");
+  });
+};
+
+if (serverOptions) {
+  const httpsServer = https.createServer(serverOptions, app);
+  startServer(httpsServer, "https");
+} else {
+  startServer(app, "http");
+}
