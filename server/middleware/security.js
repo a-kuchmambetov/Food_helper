@@ -102,7 +102,8 @@ export const corsOptions = {
       "http://localhost:5173",
       "https://localhost:5173",
       "http://localhost:3000",
-      "https://127.0.0.1:3000",
+      // Allow your production deployment domain
+      "https://food_helper.kuchmambetov.dev",
     ].filter(Boolean);
 
     // Allow requests with no origin (like mobile apps or curl requests)

@@ -80,8 +80,9 @@ async function login(req, res) {
     // Set refresh token as httpOnly cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: true,
+      sameSite: "none",
+      domain: ".kuchmambetov.dev",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -118,8 +119,9 @@ async function refreshToken(req, res) {
     // Set new refresh token as httpOnly cookie
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: true,
+      sameSite: "none",
+      domain: ".kuchmambetov.dev",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
