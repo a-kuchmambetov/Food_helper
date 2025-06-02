@@ -99,7 +99,7 @@ if (sslKeyPath && sslCertPath) {
   };
 } else if (process.env.CF_PROXY === "true") {
   // Generate a temporary self-signed certificate
-  const attrs = [{ name: "commonName", value: process.env.HOST }];
+  const attrs = [{ name: "commonName", value: HOST }];
   const pems = selfsigned.generate(attrs, { days: 365 });
   serverOptions = {
     key: pems.private,
