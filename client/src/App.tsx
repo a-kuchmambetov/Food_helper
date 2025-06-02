@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Catalog from "./pages/Catalog";
 import Dish from "./pages/Dish";
@@ -9,19 +9,32 @@ import { Settings02 } from "untitledui-js/react";
 import Footer from "./component/Footer";
 import { useLocation } from "react-router-dom";
 
-// Protected Route Component
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+// App Guard Component - protects the entire app
+function AppGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect to catalog if authenticated user tries to access auth page
+    if (isAuthenticated && location.pathname === "/auth") {
+      navigate("/catalog", { replace: true });
+    }
+  }, [isAuthenticated, location.pathname, navigate]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-700">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          <div className="text-white text-xl">Loading...</div>
+        </div>
       </div>
     );
   }
 
-  if (!isAuthenticated) {
+  // Allow access to auth page only when not authenticated
+  if (!isAuthenticated && location.pathname !== "/auth") {
     return <Auth />;
   }
 
@@ -111,11 +124,11 @@ function Navigation() {
 
         {/* Right side with user info and settings */}
         <div className="flex items-center h-full space-x-4">
+          <div className="w-10 p-2 stroke-black">
+            <Settings02 size={20} stroke={"#94969C"} />
+          </div>
           {isAuthenticated ? (
             <>
-              <span className="text-gray-300 text-sm">
-                Welcome, {user?.username}
-              </span>
               <Link
                 to="/profile"
                 onClick={() => handleTabClick("profile")}
@@ -145,9 +158,6 @@ function Navigation() {
               Sign In
             </Link>
           )}
-          <div className="w-10 p-2 stroke-black">
-            <Settings02 size={20} stroke={"#94969C"} />
-          </div>
         </div>
       </div>
     </nav>
@@ -157,52 +167,25 @@ function Navigation() {
 // Main App Component
 function AppContent() {
   return (
-    <div className="flex flex-col min-h-screen bg-bg-primary text-white bg-gradient-to-br from-black to-slate-900">
-      <Navigation />
+    <AppGuard>
+      <div className="flex flex-col min-h-screen bg-bg-primary text-white bg-gradient-to-br from-black to-slate-900">
+        <Navigation />
 
-      <Routes>
-        <Route path="/" element={<Catalog />} />
-        <Route path="/catalog" element={<Catalog />} />
-        <Route path="/dish/:id" element={<Dish />} />
-        <Route path="/auth" element={<Auth />} />
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          {/* All other routes are now protected by AppGuard */}
+          <Route path="/" element={<Catalog />} />
+          <Route path="/catalog" element={<Catalog />} />
+          <Route path="/dish/:id" element={<Dish />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/planner" element={<Profile />} />
+          <Route path="/inventory" element={<Profile />} />
+          <Route path="/help" element={<Profile />} />
+        </Routes>
 
-        {/* Protected Routes */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/planner"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/inventory"
-          element={
-            <ProtectedRoute>
-              <Auth />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/help"
-          element={
-            <ProtectedRoute>
-              <Auth />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </AppGuard>
   );
 }
 

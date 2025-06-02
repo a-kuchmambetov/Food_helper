@@ -69,6 +69,7 @@ app.get("/health", (req, res) => {
 // Import and use routes
 import authRoutes from "./modules/auth/auth.routes.js";
 import dishesRoutes from "./modules/dishes/dishes.routes.js";
+import authService from "./modules/auth/auth.service.js";
 
 // API routes
 app.use(authRoutes);
@@ -86,4 +87,14 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(
     `\n🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}\n`
   );
+  // Schedule cleanup of expired tokens and sessions
+  // Run cleanup immediately on startup
+  authService.cleanupExpiredTokens().catch(console.error);
+
+  // Run cleanup every 24 hours (86400000 ms)
+  setInterval(() => {
+    authService.cleanupExpiredTokens().catch(console.error);
+  }, 24 * 60 * 60 * 1000);
+
+  console.log("📅 Session cleanup scheduled to run every 24 hours");
 });

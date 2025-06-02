@@ -16,11 +16,10 @@ function Auth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/profile");
+      navigate("/catalog");
     }
   }, [isAuthenticated, navigate]);
 
@@ -33,12 +32,11 @@ function Auth() {
     setError("");
     setSuccess("");
     setLoading(true);
-
     try {
       if (isLogin) {
         await login(form.email, form.password);
         setSuccess("Login successful!");
-        setTimeout(() => navigate("/profile"), 1000);
+        setTimeout(() => navigate("/catalog"), 1000);
       } else {
         await register({
           email: form.email,
@@ -48,7 +46,7 @@ function Auth() {
           lastName: form.lastName,
         });
         setSuccess("Registration successful!");
-        setTimeout(() => navigate("/profile"), 1000);
+        setTimeout(() => navigate("/catalog"), 1000);
       }
     } catch (err: unknown) {
       if (err instanceof Error) {

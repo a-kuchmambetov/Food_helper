@@ -3,6 +3,7 @@ import passport from "passport";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { Strategy as LocalStrategy } from "passport-local";
 import authService from "../modules/auth/auth.service.js";
+import * as db from "../db/db.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -184,24 +185,34 @@ export const validateSession = async (req, res, next) => {
   }
 
   try {
+    // Get IP address (fallback if addRequestMetadata wasn't called)
+    const ipAddress = req.ipAddress || getClientIpAddress(req);
+
     // Check if user has active session
     const result = await db.query(
       `SELECT session_id FROM user_sessions 
        WHERE user_id = $1 AND ip_address = $2 AND is_active = true AND expires_at > CURRENT_TIMESTAMP
        LIMIT 1`,
-      [req.user.user_id, req.ipAddress]
+      [req.user.user_id, ipAddress]
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: "Session expired or invalid" });
+      // Don't fail if no session found, just log it
+      console.warn(
+        `No active session found for user ${req.user.user_id} from IP ${ipAddress}`
+      );
+      return next();
     }
 
     // Update last activity
     await db.query(
-      "UPDATE user_sessions SET last_activity = CURRENT_TIMESTAMP WHERE user_id = $1 AND ip_address = $2",
-      [req.user.user_id, req.ipAddress]
+      "UPDATE user_sessions SET last_activity = CURRENT_TIMESTAMP WHERE user_id = $1 AND ip_address = $2 AND is_active = true",
+      [req.user.user_id, ipAddress]
     );
 
+    console.log(
+      `Updated last_activity for user ${req.user.user_id} from IP ${ipAddress}`
+    );
     next();
   } catch (error) {
     console.error("Session validation error:", error);

@@ -4,6 +4,8 @@ import {
   authenticateToken,
   authenticateLocal,
   addRequestMetadata,
+  optionalAuth,
+  validateSession,
 } from "../../middleware/auth.js";
 import { authRateLimit, strictRateLimit } from "../../middleware/security.js";
 import {
@@ -43,13 +45,19 @@ router.post(
 );
 
 // Protected routes
-router.post("/auth/logout", authenticateToken, authController.logout);
+router.post("/auth/logout", optionalAuth, authController.logout); // Use optional auth for logout
 
-router.get("/auth/profile", authenticateToken, authController.getProfile);
+router.get(
+  "/auth/profile",
+  authenticateToken,
+  validateSession,
+  authController.getProfile
+);
 
 router.put(
   "/auth/profile",
   authenticateToken,
+  validateSession,
   validateProfileUpdate,
   authController.updateProfile
 );
@@ -57,20 +65,41 @@ router.put(
 router.post(
   "/auth/change-password",
   authenticateToken,
+  validateSession,
   strictRateLimit,
   validatePasswordChange,
   authController.changePassword
 );
 
-router.get("/auth/verify-token", authenticateToken, authController.verifyToken);
+router.get(
+  "/auth/verify-token",
+  authenticateToken,
+  validateSession,
+  authController.verifyToken
+);
 
 // Security management routes
-router.get("/auth/sessions", authenticateToken, authController.getUserSessions);
+router.get(
+  "/auth/sessions",
+  authenticateToken,
+  validateSession,
+  authController.getUserSessions
+);
 
 router.delete(
   "/auth/sessions/:sessionId",
   authenticateToken,
+  validateSession,
   authController.revokeSession
+);
+
+// Admin routes
+router.post(
+  "/auth/admin/cleanup",
+  authenticateToken,
+  validateSession,
+  strictRateLimit,
+  authController.cleanupExpiredSessions
 );
 
 export default router;

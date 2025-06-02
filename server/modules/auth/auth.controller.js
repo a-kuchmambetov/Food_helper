@@ -1,6 +1,7 @@
 import authService from "./auth.service.js";
 import { getClientIpAddress } from "../../middleware/auth.js";
 import * as db from "../../db/db.js";
+import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -145,13 +146,47 @@ async function logout(req, res) {
   try {
     const refreshToken = req.cookies.refreshToken;
     const ipAddress = getClientIpAddress(req);
-    const userId = req.user?.user_id;
+    let userId = req.user?.user_id || req.body?.userId;
 
-    if (refreshToken && userId) {
-      await authService.logoutUser(refreshToken, ipAddress, userId);
+    // If passport didn't set user, try to extract from JWT manually
+    if (!userId) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.substring(7);
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+            issuer: "food-helper-api",
+            audience: "food-helper-client",
+          });
+          userId = decoded.userId;
+          console.log("Extracted userId from JWT:", userId);
+        } catch (jwtError) {
+          console.warn("Failed to decode JWT manually:", jwtError.message);
+        }
+      }
     }
 
-    // Clear refresh token cookie
+    console.log("Logout attempt:", {
+      hasRefreshToken: !!refreshToken,
+      hasUser: !!req.user,
+      userId: userId,
+      authHeader: req.headers.authorization ? "present" : "missing",
+      bodyUserId: req.body?.userId,
+    });
+
+    // If we have a user ID, perform full logout
+    if (userId) {
+      await authService.logoutUser(refreshToken, ipAddress, userId);
+    } else if (refreshToken) {
+      // If no user ID but we have refresh token, try to revoke it
+      try {
+        await authService.revokeRefreshToken(refreshToken, ipAddress);
+      } catch (error) {
+        console.warn("Failed to revoke refresh token during logout:", error);
+      }
+    }
+
+    // Always clear refresh token cookie regardless of user state
     res.clearCookie("refreshToken");
 
     res.json({
@@ -325,6 +360,74 @@ async function revokeSession(req, res) {
   }
 }
 
+/**
+ * Cleanup expired tokens and sessions (Admin endpoint)
+ */
+async function cleanupExpiredSessions(req, res) {
+  try {
+    // Only allow admin users to trigger cleanup
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        error: "Insufficient permissions. Admin access required.",
+      });
+    }
+
+    await authService.cleanupExpiredTokens();
+
+    await authService.logSecurityEvent(
+      req.user.user_id,
+      "CLEANUP_TRIGGERED",
+      { trigger: "manual" },
+      getClientIpAddress(req),
+      req.get("User-Agent")
+    );
+
+    res.json({
+      message: "Cleanup completed successfully",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Cleanup error:", error);
+    res.status(500).json({
+      error: "Failed to cleanup expired sessions",
+    });
+  }
+}
+
+/**
+ * Debug endpoint to test session activity updates
+ */
+async function testSessionActivity(req, res) {
+  try {
+    const userId = req.user.user_id;
+    const ipAddress = getClientIpAddress(req);
+
+    // Get current session info
+    const result = await db.query(
+      `SELECT session_id, created_at, last_activity, expires_at, is_active
+       FROM user_sessions 
+       WHERE user_id = $1 AND ip_address = $2 AND is_active = true 
+       ORDER BY last_activity DESC
+       LIMIT 1`,
+      [userId, ipAddress]
+    );
+
+    res.json({
+      message: "Session activity test",
+      timestamp: new Date().toISOString(),
+      userId: userId,
+      ipAddress: ipAddress,
+      session: result.rows[0] || null,
+      hasSession: result.rows.length > 0,
+    });
+  } catch (error) {
+    console.error("Test session activity error:", error);
+    res.status(500).json({
+      error: "Failed to test session activity",
+    });
+  }
+}
+
 export default {
   register,
   login,
@@ -336,4 +439,6 @@ export default {
   verifyToken,
   getUserSessions,
   revokeSession,
+  cleanupExpiredSessions,
+  testSessionActivity,
 };

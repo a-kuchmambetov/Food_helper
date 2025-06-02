@@ -1,6 +1,10 @@
 import express from "express";
 import dishesController from "./dishes.controller.js";
-import { optionalAuth, authenticateToken } from "../../middleware/auth.js";
+import {
+  optionalAuth,
+  authenticateToken,
+  validateSession,
+} from "../../middleware/auth.js";
 import { searchRateLimit } from "../../middleware/security.js";
 
 const router = express.Router();

@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from "react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://0.0.0.0:3000/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 interface User {
   userId: string;
@@ -87,7 +87,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return false;
     }
   }, []);
-
   const logout = useCallback(async (): Promise<void> => {
     try {
       const token = accessToken || localStorage.getItem("accessToken");
@@ -99,6 +98,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             Authorization: `Bearer ${token}`,
           },
           credentials: "include",
+          body: JSON.stringify({
+            userId: user?.userId, // Include user ID as backup
+          }),
         });
       }
     } catch (error) {
@@ -108,7 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setAccessToken(null);
       localStorage.removeItem("accessToken");
     }
-  }, [accessToken]);
+  }, [accessToken, user?.userId]);
   // Set up axios interceptor for automatic token handling
   useEffect(() => {
     const setupInterceptors = () => {
@@ -159,9 +161,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
     };
     setupInterceptors();
-  }, [accessToken, logout, refreshToken]);
-
-  // Check if user is authenticated on app load
+  }, [accessToken, logout, refreshToken]); // Check if user is authenticated on app load
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem("accessToken");
@@ -170,20 +170,61 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           const isValid = await verifyToken(token);
           if (!isValid) {
+            console.log("Token invalid, attempting refresh...");
             const refreshed = await refreshToken();
             if (!refreshed) {
-              logout();
+              console.log("Token refresh failed, logging out...");
+              await logout();
             }
           }
         } catch (error) {
           console.error("Token verification failed:", error);
-          logout();
+          await logout();
         }
       }
       setLoading(false);
     };
     initAuth();
   }, [logout, refreshToken]);
+
+  // Clear sensitive data on page unload for security
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Only clear if user is not authenticated to avoid losing session unnecessarily
+      if (!user) {
+        localStorage.removeItem("accessToken");
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [user]);
+
+  // Handle browser tab/window close - cleanup session
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Clear any sensitive data on page unload if needed
+      // This is a security measure but localStorage will persist
+      // for legitimate single-page navigation
+    };
+
+    const handleVisibilityChange = () => {
+      // Optional: You could implement session timeout on tab switch
+      // if (document.hidden && user) {
+      //   // Start session timeout timer
+      // }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [user]);
 
   const makeAuthenticatedRequest = async (
     url: string,

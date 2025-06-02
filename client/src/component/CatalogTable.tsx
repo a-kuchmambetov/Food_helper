@@ -31,7 +31,6 @@ function CatalogTable({ filters, data, onClick }: CatalogTableProps) {
 
   useEffect(() => {
     localStorage.setItem(USERFILTERS_STORAGE_KEY, JSON.stringify(input));
-    onClick(input);
   }, [input]);
 
   const handleChangeSingle = (field: string, value: string | number) => {
