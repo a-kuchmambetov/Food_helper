@@ -1,19 +1,21 @@
 import express from "express";
 import dishesController from "./dishes.controller.js";
+import { optionalAuth, authenticateToken } from "../../middleware/auth.js";
+import { searchRateLimit } from "../../middleware/security.js";
 
 const router = express.Router();
 
-router.get("/dish/:id", dishesController.getDishById);
+// Public routes with optional authentication
+router.get("/dish/:id", optionalAuth, dishesController.getDishById);
+router.get("/dishes", optionalAuth, dishesController.getAllDishes);
+router.get("/dishes/limited", optionalAuth, dishesController.getDishesLimited);
 
-// Get a list of all dishes
-router.get("/dishes", dishesController.getAllDishes);
-
-router.get("/dishes/limited", dishesController.getDishesLimited);
-
-// Get a list of filters (categories and tastes)
-router.get("/dishes/filters", dishesController.getFilters);
-
-// Post filters to get all matched dishes
-router.post("/dishes/filters", dishesController.getDishesByFilters);
+// Search routes with rate limiting
+router.get("/dishes/filters", searchRateLimit, dishesController.getFilters);
+router.post(
+  "/dishes/filters",
+  searchRateLimit,
+  dishesController.getDishesByFilters
+);
 
 export default router;
