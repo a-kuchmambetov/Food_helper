@@ -75,15 +75,15 @@ async function login(req, res) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const { user, accessToken, refreshToken } = req.user;
-
-    // Set refresh token as httpOnly cookie
+    const { user, accessToken, refreshToken } = req.user; // Set refresh token as httpOnly cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      domain: ".kuchmambetov.dev",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      domain:
+        process.env.NODE_ENV === "production" ? ".kuchmambetov.dev" : undefined,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/",
     });
 
     res.json({
@@ -114,15 +114,15 @@ async function refreshToken(req, res) {
     const result = await authService.refreshAccessToken(
       refreshToken,
       ipAddress
-    );
-
-    // Set new refresh token as httpOnly cookie
+    ); // Set new refresh token as httpOnly cookie
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      domain: ".kuchmambetov.dev",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      domain:
+        process.env.NODE_ENV === "production" ? ".kuchmambetov.dev" : undefined,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/",
     });
 
     res.json({
@@ -130,10 +130,15 @@ async function refreshToken(req, res) {
       accessToken: result.accessToken,
     });
   } catch (error) {
-    console.error("Token refresh error:", error);
-
-    // Clear invalid refresh token cookie
-    res.clearCookie("refreshToken");
+    console.error("Token refresh error:", error); // Clear invalid refresh token cookie
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      domain:
+        process.env.NODE_ENV === "production" ? ".kuchmambetov.dev" : undefined,
+      path: "/",
+    });
 
     res.status(401).json({
       error: error.message || "Invalid refresh token",
@@ -186,10 +191,15 @@ async function logout(req, res) {
       } catch (error) {
         console.warn("Failed to revoke refresh token during logout:", error);
       }
-    }
-
-    // Always clear refresh token cookie regardless of user state
-    res.clearCookie("refreshToken");
+    } // Always clear refresh token cookie regardless of user state
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      domain:
+        process.env.NODE_ENV === "production" ? ".kuchmambetov.dev" : undefined,
+      path: "/",
+    });
 
     res.json({
       message: "Logout successful",

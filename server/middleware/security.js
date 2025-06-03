@@ -69,7 +69,7 @@ export const strictRateLimit = rateLimit({
 });
 
 /**
- * Enhanced helmet configuration
+ * Enhanced helmet configuration (Cloudflare compatible)
  */
 export const securityHeaders = helmet({
   contentSecurityPolicy: {
@@ -82,6 +82,11 @@ export const securityHeaders = helmet({
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"],
+      connectSrc: [
+        "'self'",
+        "https://api_food_helper.kuchmambetov.dev",
+        "https://food_helper.kuchmambetov.dev",
+      ],
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -90,6 +95,8 @@ export const securityHeaders = helmet({
     includeSubDomains: true,
     preload: true,
   },
+  // Allow Cloudflare to handle some security headers
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 });
 
 /**
@@ -102,8 +109,9 @@ export const corsOptions = {
       "http://localhost:5173",
       "https://localhost:5173",
       "http://localhost:3000",
-      // Allow your production deployment domain
+      // Production domains
       "https://food_helper.kuchmambetov.dev",
+      "https://api_food_helper.kuchmambetov.dev",
     ].filter(Boolean);
 
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -112,6 +120,7 @@ export const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.warn(`CORS blocked origin: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     }
   },
@@ -144,11 +153,11 @@ export const requestSizeLimit = (req, res, next) => {
 };
 
 /**
- * Sanitize request headers
+ * Sanitize request headers (Cloudflare compatible)
  */
 export const sanitizeHeaders = (req, res, next) => {
-  // Remove potentially dangerous headers
-  delete req.headers["x-forwarded-host"];
+  // Don't remove Cloudflare headers - they're needed for proper IP detection
+  // Only remove potentially dangerous headers that could cause issues
   delete req.headers["x-forwarded-server"];
 
   // Ensure proper content type for JSON requests

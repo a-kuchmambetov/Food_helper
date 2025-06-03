@@ -154,11 +154,12 @@ export const checkOwnership = (resourceUserIdField = "userId") => {
 };
 
 /**
- * Get client IP address
+ * Get client IP address (Cloudflare compatible)
  */
 export const getClientIpAddress = (req) => {
   return (
-    req.headers["x-forwarded-for"] ||
+    req.headers["cf-connecting-ip"] || // Cloudflare real IP
+    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
     req.headers["x-real-ip"] ||
     req.connection.remoteAddress ||
     req.socket.remoteAddress ||

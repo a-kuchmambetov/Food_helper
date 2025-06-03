@@ -126,7 +126,26 @@ export const validateProfileUpdate = [
  * Refresh token validation
  */
 export const validateRefreshToken = [
-  body("refreshToken").notEmpty().withMessage("Refresh token is required"),
+  // Make refreshToken optional since it might come from cookies instead of body
+  body("refreshToken")
+    .optional()
+    .isString()
+    .withMessage("Refresh token must be a string"),
+
+  // Custom validation to check if refresh token exists in either body or cookies
+  (req, res, next) => {
+    const bodyToken = req.body.refreshToken;
+    const cookieToken = req.cookies.refreshToken;
+
+    if (!bodyToken && !cookieToken) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: [{ msg: "Refresh token is required", path: "refreshToken" }],
+      });
+    }
+
+    next();
+  },
 
   handleValidationErrors,
 ];

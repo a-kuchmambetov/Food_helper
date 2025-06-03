@@ -24,8 +24,8 @@ import authService from "./modules/auth/auth.service.js";
 dotenv.config();
 const app = express();
 
-// Trust proxy for accurate IP addresses
-app.set("trust proxy", 1);
+// Trust proxy for accurate IP addresses (Cloudflare setup)
+app.set("trust proxy", true);
 
 // Security middleware (applied first)
 app.use(securityHeaders);

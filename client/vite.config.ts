@@ -18,7 +18,9 @@ export default defineConfig({
         path.resolve(__dirname, "certs/_wildcard.kuchmambetov.dev+3.pem")
       ),
     },
-    allowedHosts: ["food_helper.kuchmambetov.dev"],
+    allowedHosts: ["food_helper.kuchmambetov.dev", "localhost"],
+    host: "0.0.0.0", // Allow external connections
+    port: 5173,
     watch: {
       usePolling: true,
     },
@@ -26,6 +28,7 @@ export default defineConfig({
   preview: {
     port: 4173,
     strictPort: true,
+    host: "0.0.0.0", // Allow external connections
   },
   build: {
     rollupOptions: {
