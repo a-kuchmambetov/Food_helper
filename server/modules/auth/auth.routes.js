@@ -14,6 +14,8 @@ import {
   validatePasswordChange,
   validateProfileUpdate,
   validateRefreshToken,
+  validateEmailVerification,
+  validateResendVerification,
 } from "../../middleware/validation.js";
 
 const router = express.Router();
@@ -42,6 +44,21 @@ router.post(
   authRateLimit,
   validateRefreshToken,
   authController.refreshToken
+);
+
+// Email verification routes
+router.post(
+  "/auth/verify-email",
+  authRateLimit,
+  validateEmailVerification,
+  authController.verifyEmail
+);
+
+router.post(
+  "/auth/resend-verification",
+  authRateLimit,
+  validateResendVerification,
+  authController.resendVerificationEmail
 );
 
 // Protected routes

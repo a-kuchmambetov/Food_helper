@@ -31,9 +31,12 @@ function TableRow({ data, onClick }: TableRowProps) {
       <td className={tdStyle}>
         <div className="flex flex-wrap gap-x-2 gap-y-2">
           {""}
-          {data?.tastes.map((e) => (
+          {data?.tastes.slice(0, 2).map((e) => (
             <Badge key={uuidv4()} text={e} />
           ))}
+          {data?.tastes.length > 2 && (
+            <Badge key="extra" text={`+${data.tastes.length - 2}`} />
+          )}
         </div>
       </td>
       <td className={tdStyle + " text-center"}>{data.cookingTime} min</td>

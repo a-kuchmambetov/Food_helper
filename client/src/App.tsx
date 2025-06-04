@@ -5,6 +5,7 @@ import Catalog from "./pages/Catalog";
 import Dish from "./pages/Dish";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import EmailVerification from "./pages/EmailVerification";
 import { Settings02 } from "untitledui-js/react";
 import Footer from "./component/Footer";
 import { useLocation } from "react-router-dom";
@@ -24,7 +25,7 @@ function AppGuard({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-700">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-black to-slate-900">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
           <div className="text-white text-xl">Loading...</div>
@@ -33,8 +34,12 @@ function AppGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Allow access to auth page only when not authenticated
-  if (!isAuthenticated && location.pathname !== "/auth") {
+  // Allow access to auth page and email verification only when not authenticated
+  if (
+    !isAuthenticated &&
+    location.pathname !== "/auth" &&
+    location.pathname !== "/verify-email"
+  ) {
     return <Auth />;
   }
 
@@ -139,7 +144,7 @@ function Navigation() {
                 }`}
                 title="Profile"
               >
-                {user?.username?.charAt(0).toUpperCase()}
+                {user?.name?.charAt(0).toUpperCase()}
               </Link>
               <button
                 onClick={handleLogout}
@@ -173,6 +178,7 @@ function AppContent() {
 
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
           {/* All other routes are now protected by AppGuard */}
           <Route path="/" element={<Catalog />} />
           <Route path="/catalog" element={<Catalog />} />

@@ -21,16 +21,16 @@ function Table({ data }: TableProps) {
       <thead>
         <tr className="border-t-0 border-2 border-zinc-700 text-nowrap max-md:text-wrap">
           <th className="px-6 py-3 text-sm text-zinc-400">Dish name</th>
-          <th className="w-[10%] max-md:w-[20%] px-6 py-3 text-sm text-zinc-400">
+          <th className="w-[10%] max-xl:w-[15%] px-6 py-3 text-sm text-zinc-400">
             Category
           </th>
-          <th className="w-[25%] max-md:w-[12.5%] px-6 py-3 text-sm text-zinc-400">
+          <th className="w-[16%] max-md:w-[12.5%] max-xl:w-[20%] px-6 py-3 text-sm text-zinc-400">
             Taste
           </th>
           <th className="w-[12.5%] max-sm:w-[20%] px-6 py-3 text-sm text-zinc-400 text-center text-wrap">
             Cooking time
           </th>
-          <th className="w-[12.5%] max-sm:w-[17.5%] px-6 py-3 text-sm text-zinc-400 text-center text-wrap">
+          <th className="w-[15%] max-xs:w-[15%] max-sm:w-[17.5%] px-6 py-3 text-sm text-zinc-400 text-center text-wrap">
             Cooking difficulty
           </th>
         </tr>

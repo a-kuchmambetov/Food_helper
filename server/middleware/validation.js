@@ -23,11 +23,13 @@ export const validateRegistration = [
     .normalizeEmail()
     .withMessage("Please provide a valid email address"),
 
-  body("username")
-    .isLength({ min: 3, max: 30 })
-    .withMessage("Username must be between 3 and 30 characters")
-    .matches(/^[a-zA-Z0-9_]+$/)
-    .withMessage("Username can only contain letters, numbers, and underscores"),
+  body("name")
+    .isLength({ min: 3, max: 100 })
+    .withMessage("Name must be between 3 and 100 characters")
+    .matches(/^[a-zA-Z0-9_\s]+$/)
+    .withMessage(
+      "Name can only contain letters, numbers, underscores, and spaces"
+    ),
 
   body("password")
     .isLength({ min: 8 })
@@ -36,21 +38,6 @@ export const validateRegistration = [
     .withMessage(
       "Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character"
     ),
-
-  body("firstName")
-    .optional()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("First name must be between 1 and 100 characters")
-    .matches(/^[a-zA-Z\s]+$/)
-    .withMessage("First name can only contain letters and spaces"),
-
-  body("lastName")
-    .optional()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Last name must be between 1 and 100 characters")
-    .matches(/^[a-zA-Z\s]+$/)
-    .withMessage("Last name can only contain letters and spaces"),
-
   handleValidationErrors,
 ];
 
@@ -64,6 +51,11 @@ export const validateLogin = [
     .withMessage("Please provide a valid email address"),
 
   body("password").notEmpty().withMessage("Password is required"),
+
+  body("rememberMe")
+    .optional()
+    .isBoolean()
+    .withMessage("Remember me must be a boolean value"),
 
   handleValidationErrors,
 ];
@@ -98,26 +90,14 @@ export const validatePasswordChange = [
  * Profile update validation rules
  */
 export const validateProfileUpdate = [
-  body("firstName")
+  body("name")
     .optional()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("First name must be between 1 and 100 characters")
-    .matches(/^[a-zA-Z\s]+$/)
-    .withMessage("First name can only contain letters and spaces"),
-
-  body("lastName")
-    .optional()
-    .isLength({ min: 1, max: 100 })
-    .withMessage("Last name must be between 1 and 100 characters")
-    .matches(/^[a-zA-Z\s]+$/)
-    .withMessage("Last name can only contain letters and spaces"),
-
-  body("username")
-    .optional()
-    .isLength({ min: 3, max: 30 })
-    .withMessage("Username must be between 3 and 30 characters")
-    .matches(/^[a-zA-Z0-9_]+$/)
-    .withMessage("Username can only contain letters, numbers, and underscores"),
+    .isLength({ min: 3, max: 100 })
+    .withMessage("Name must be between 3 and 100 characters")
+    .matches(/^[a-zA-Z0-9_\s]+$/)
+    .withMessage(
+      "Name can only contain letters, numbers, underscores, and spaces"
+    ),
 
   handleValidationErrors,
 ];
@@ -147,5 +127,28 @@ export const validateRefreshToken = [
     next();
   },
 
+  handleValidationErrors,
+];
+
+/**
+ * Email verification validation rules
+ */
+export const validateEmailVerification = [
+  body("token")
+    .isLength({ min: 32, max: 256 })
+    .withMessage("Invalid verification token format")
+    .isHexadecimal()
+    .withMessage("Verification token must be a valid hexadecimal string"),
+  handleValidationErrors,
+];
+
+/**
+ * Resend verification email validation rules
+ */
+export const validateResendVerification = [
+  body("email")
+    .isEmail()
+    .normalizeEmail()
+    .withMessage("Please provide a valid email address"),
   handleValidationErrors,
 ];

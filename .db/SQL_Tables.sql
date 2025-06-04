@@ -1,10 +1,61 @@
 -- Користувачі
-CREATE TABLE Users (
-    user_id SERIAL PRIMARY KEY,
-    username TEXT UNIQUE NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Users table with comprehensive security features
+CREATE TABLE IF NOT EXISTS users (
+    user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'admin', 'moderator')),
+    is_active BOOLEAN DEFAULT true,
+    is_verified BOOLEAN DEFAULT false,
+    email_verification_token VARCHAR(255),
+    email_verification_expires TIMESTAMP,
+    password_reset_token VARCHAR(255),
+    password_reset_expires TIMESTAMP,
+    last_login TIMESTAMP,
+    login_attempts INTEGER DEFAULT 0,
+    locked_until TIMESTAMP,
+    failed_login_attempts INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Refresh tokens table for JWT token management
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    token_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    token_hash VARCHAR(255) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    revoked_at TIMESTAMP,
+    replaced_by_token UUID,
+    created_by_ip INET,
+    revoked_by_ip INET
+);
+
+-- User sessions table for session management
+CREATE TABLE IF NOT EXISTS user_sessions (
+    session_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    ip_address INET,
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    is_active BOOLEAN DEFAULT true
+);
+
+-- Security audit log
+CREATE TABLE IF NOT EXISTS security_audit_log (
+    log_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(user_id) ON DELETE SET NULL,
+    action VARCHAR(100) NOT NULL,
+    details JSONB,
+    ip_address INET,
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Категорії страв
@@ -85,7 +136,7 @@ CREATE TABLE MealTypes (
 
 -- Заплановані страви
 CREATE TABLE PlanedDishes (
-    user_id INTEGER NOT NULL REFERENCES Users(user_id)
+    user_id UUID NOT NULL REFERENCES Users(user_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     dish_id INTEGER NOT NULL REFERENCES Dishes(dish_id)
@@ -99,7 +150,7 @@ CREATE TABLE PlanedDishes (
 
 -- Інвентаризація інгредієнтів
 CREATE TABLE IngredientInventory (
-    user_id INTEGER NOT NULL REFERENCES Users(user_id)
+    user_id UUID NOT NULL REFERENCES Users(user_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     ingredient_id INTEGER NOT NULL REFERENCES Ingredients(ingredient_id)
@@ -139,9 +190,12 @@ CREATE TABLE Prices (
 -- TRUNCATE TABLE "ingredients" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "dishingredients" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "recipes" RESTART IDENTITY CASCADE;
--- TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "planeddishes" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "mealtypes" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "ingredientinventory" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "prices" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "currency" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "user_sessions" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "security_audit_log" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "refresh_tokens" RESTART IDENTITY CASCADE;

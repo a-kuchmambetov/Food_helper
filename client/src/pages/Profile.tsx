@@ -9,9 +9,7 @@ function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [profileData, setProfileData] = useState({
-    username: "",
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
   });
 
@@ -30,11 +28,8 @@ function Profile() {
       navigate("/auth");
       return;
     }
-
     setProfileData({
-      username: user.username || "",
-      firstName: user.firstName || "",
-      lastName: user.lastName || "",
+      name: user.name || "",
       email: user.email || "",
     });
   }, [user, navigate]);
@@ -44,12 +39,9 @@ function Profile() {
     setError("");
     setSuccess("");
     setIsSubmitting(true);
-
     try {
       await updateProfile({
-        username: profileData.username,
-        firstName: profileData.firstName,
-        lastName: profileData.lastName,
+        name: profileData.name,
       });
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
@@ -120,15 +112,13 @@ function Profile() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-700 text-white p-4">
       <div className="bg-slate-800 p-8 rounded-xl shadow-2xl max-w-2xl w-full">
-        {/* Profile Header */}
+        {/* Profile Header */}{" "}
         <div className="flex flex-col items-center mb-8">
           <div className="w-32 h-32 rounded-full shadow-lg mb-4 border-4 border-sky-500 bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-4xl font-bold">
-            {user.username.charAt(0).toUpperCase()}
+            {user.name.charAt(0).toUpperCase()}
           </div>
           <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-cyan-300 mb-1">
-            {user.firstName && user.lastName
-              ? `${user.firstName} ${user.lastName}`
-              : user.username}
+            {user.name}
           </h1>
           <p className="text-slate-400">{user.email}</p>
           <div className="flex gap-2 mt-2">
@@ -152,7 +142,6 @@ function Profile() {
             </span>
           </div>
         </div>
-
         {/* Error/Success Messages */}
         {error && (
           <div className="bg-red-600 text-white p-3 rounded-lg mb-4">
@@ -163,76 +152,27 @@ function Profile() {
           <div className="bg-green-600 text-white p-3 rounded-lg mb-4">
             {success}
           </div>
-        )}
-
+        )}{" "}
         {/* Profile Form */}
         {isEditing ? (
           <form onSubmit={handleProfileSubmit} className="space-y-4 mb-6">
-            {" "}
             <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium mb-2"
-              >
-                Username
+              <label htmlFor="name" className="block text-sm font-medium mb-2">
+                Name
               </label>
               <input
-                id="username"
-                name="username"
+                id="name"
+                name="name"
                 type="text"
-                value={profileData.username}
+                value={profileData.name}
                 onChange={(e) =>
-                  setProfileData({ ...profileData, username: e.target.value })
+                  setProfileData({ ...profileData, name: e.target.value })
                 }
                 className="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 focus:border-sky-500 focus:outline-none"
                 required
-                placeholder="Enter your username"
+                placeholder="Enter your name"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              {" "}
-              <div>
-                <label
-                  htmlFor="firstName"
-                  className="block text-sm font-medium mb-2"
-                >
-                  First Name
-                </label>
-                <input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  value={profileData.firstName}
-                  onChange={(e) =>
-                    setProfileData({
-                      ...profileData,
-                      firstName: e.target.value,
-                    })
-                  }
-                  className="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 focus:border-sky-500 focus:outline-none"
-                  placeholder="Enter your first name"
-                />
-              </div>{" "}
-              <div>
-                <label
-                  htmlFor="lastName"
-                  className="block text-sm font-medium mb-2"
-                >
-                  Last Name
-                </label>
-                <input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  value={profileData.lastName}
-                  onChange={(e) =>
-                    setProfileData({ ...profileData, lastName: e.target.value })
-                  }
-                  className="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 focus:border-sky-500 focus:outline-none"
-                  placeholder="Enter your last name"
-                />
-              </div>
-            </div>{" "}
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-2">
                 Email
@@ -275,13 +215,7 @@ function Profile() {
               </h2>
               <div className="text-slate-300 text-sm space-y-2">
                 <p>
-                  <strong>Username:</strong> {user.username}
-                </p>
-                <p>
-                  <strong>First Name:</strong> {user.firstName || "Not set"}
-                </p>
-                <p>
-                  <strong>Last Name:</strong> {user.lastName || "Not set"}
+                  <strong>Name:</strong> {user.name}
                 </p>
                 <p>
                   <strong>Email:</strong> {user.email}
@@ -307,7 +241,6 @@ function Profile() {
             </div>
           </div>
         )}
-
         {/* Password Change Form */}
         {isChangingPassword ? (
           <form onSubmit={handlePasswordSubmit} className="space-y-4 mb-6">
@@ -400,7 +333,6 @@ function Profile() {
             </div>
           </form>
         ) : null}
-
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-4 justify-center">
           {!isEditing && !isChangingPassword && (

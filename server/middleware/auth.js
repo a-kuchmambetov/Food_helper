@@ -48,12 +48,14 @@ passport.use(
       try {
         const ipAddress = getClientIpAddress(req);
         const userAgent = req.get("User-Agent");
+        const { rememberMe } = req.body;
 
         const result = await authService.loginUser({
           email,
           password,
           ipAddress,
           userAgent,
+          rememberMe,
         });
 
         return done(null, result);

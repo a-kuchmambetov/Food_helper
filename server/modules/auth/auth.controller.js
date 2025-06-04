@@ -11,37 +11,34 @@ dotenv.config();
  */
 async function register(req, res) {
   try {
-    const { email, username, password, firstName, lastName } = req.body;
+    const { email, name, password } = req.body;
     const ipAddress = getClientIpAddress(req);
 
     const result = await authService.registerUser({
       email,
-      username,
+      name,
       password,
-      firstName,
-      lastName,
     });
 
     // Log registration event
     await authService.logSecurityEvent(
       result.user.user_id,
       "USER_REGISTERED",
-      { email, username },
+      { email, name },
       ipAddress,
       req.get("User-Agent")
     );
-
     res.status(201).json({
-      message: "User registered successfully",
+      message:
+        "User registered successfully. Please check your email to verify your account.",
       user: {
         userId: result.user.user_id,
         email: result.user.email,
-        username: result.user.username,
-        firstName: result.user.first_name,
-        lastName: result.user.last_name,
+        name: result.user.name,
         role: result.user.role,
         isVerified: result.user.is_verified,
       },
+      requiresEmailVerification: !result.user.is_verified,
     });
   } catch (error) {
     console.error("Registration error:", error);
@@ -52,7 +49,7 @@ async function register(req, res) {
       "REGISTRATION_FAILED",
       {
         email: req.body.email,
-        username: req.body.username,
+        name: req.body.name,
         error: error.message,
       },
       getClientIpAddress(req),
@@ -74,15 +71,24 @@ async function login(req, res) {
     if (!req.user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
+    const { user, accessToken, refreshToken } = req.user;
 
-    const { user, accessToken, refreshToken } = req.user; // Set refresh token as httpOnly cookie
+    // Get rememberMe preference from request body
+    const { rememberMe } = req.body;
+
+    // Set refresh token with appropriate expiration based on rememberMe
+    const maxAge = rememberMe
+      ? 30 * 24 * 60 * 60 * 1000 // 30 days if remember me
+      : 7 * 24 * 60 * 60 * 1000; // 7 days default
+
+    // Set refresh token as httpOnly cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       domain:
         process.env.NODE_ENV === "production" ? ".kuchmambetov.dev" : undefined,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: maxAge,
       path: "/",
     });
 
@@ -109,19 +115,35 @@ async function refreshToken(req, res) {
     if (!refreshToken) {
       return res.status(401).json({ error: "Refresh token not provided" });
     }
-
     const ipAddress = getClientIpAddress(req);
     const result = await authService.refreshAccessToken(
       refreshToken,
       ipAddress
-    ); // Set new refresh token as httpOnly cookie
+    );
+
+    // Check if this is an extended session by examining the new refresh token's expiration
+    // We can determine this by checking if the token was created with extended duration
+    const tokenVerification = await authService.verifyRefreshToken(
+      result.refreshToken,
+      ipAddress
+    );
+    const isExtendedSession =
+      new Date(tokenVerification.expires_at).getTime() - Date.now() >
+      7 * 24 * 60 * 60 * 1000;
+
+    // Set new refresh token with appropriate expiration
+    const maxAge = isExtendedSession
+      ? 30 * 24 * 60 * 60 * 1000 // 30 days for extended sessions
+      : 7 * 24 * 60 * 60 * 1000; // 7 days for regular sessions
+
+    // Set new refresh token as httpOnly cookie
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       domain:
         process.env.NODE_ENV === "production" ? ".kuchmambetov.dev" : undefined,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: maxAge,
       path: "/",
     });
 
@@ -218,14 +240,11 @@ async function logout(req, res) {
 async function getProfile(req, res) {
   try {
     const user = await authService.getUserById(req.user.user_id);
-
     res.json({
       user: {
         userId: user.user_id,
         email: user.email,
-        username: user.username,
-        firstName: user.first_name,
-        lastName: user.last_name,
+        name: user.name,
         role: user.role,
         isVerified: user.is_verified,
         createdAt: user.created_at,
@@ -244,13 +263,11 @@ async function getProfile(req, res) {
  */
 async function updateProfile(req, res) {
   try {
-    const { firstName, lastName, username } = req.body;
+    const { name } = req.body;
     const userId = req.user.user_id;
 
     const updatedUser = await authService.updateUserProfile(userId, {
-      firstName,
-      lastName,
-      username,
+      name,
     });
 
     res.json({
@@ -258,9 +275,7 @@ async function updateProfile(req, res) {
       user: {
         userId: updatedUser.user_id,
         email: updatedUser.email,
-        username: updatedUser.username,
-        firstName: updatedUser.first_name,
-        lastName: updatedUser.last_name,
+        name: updatedUser.name,
         role: updatedUser.role,
         isVerified: updatedUser.is_verified,
       },
@@ -307,7 +322,7 @@ async function verifyToken(req, res) {
     user: {
       userId: req.user.user_id,
       email: req.user.email,
-      username: req.user.username,
+      name: req.user.name,
       role: req.user.role,
       isVerified: req.user.is_verified,
     },
@@ -440,6 +455,93 @@ async function testSessionActivity(req, res) {
   }
 }
 
+/**
+ * Verify email address
+ */
+async function verifyEmail(req, res) {
+  try {
+    const { token } = req.body;
+    const ipAddress = getClientIpAddress(req);
+
+    const result = await authService.verifyEmail(token);
+
+    // Log verification event
+    await authService.logSecurityEvent(
+      result.user.userId,
+      "EMAIL_VERIFIED",
+      { email: result.user.email },
+      ipAddress,
+      req.get("User-Agent")
+    );
+
+    res.json({
+      message: "Email verified successfully",
+      user: result.user,
+    });
+  } catch (error) {
+    console.error("Email verification error:", error);
+
+    // Log failed verification
+    await authService.logSecurityEvent(
+      null,
+      "EMAIL_VERIFICATION_FAILED",
+      {
+        token: req.body.token,
+        error: error.message,
+      },
+      getClientIpAddress(req),
+      req.get("User-Agent")
+    );
+
+    res.status(400).json({
+      error: error.message || "Email verification failed",
+    });
+  }
+}
+
+/**
+ * Resend verification email
+ */
+async function resendVerificationEmail(req, res) {
+  try {
+    const { email } = req.body;
+    const ipAddress = getClientIpAddress(req);
+
+    const result = await authService.resendVerificationEmail(email);
+
+    // Log resend event
+    await authService.logSecurityEvent(
+      null,
+      "VERIFICATION_EMAIL_RESENT",
+      { email },
+      ipAddress,
+      req.get("User-Agent")
+    );
+
+    res.json({
+      message: "Verification email sent successfully",
+    });
+  } catch (error) {
+    console.error("Resend verification email error:", error);
+
+    // Log failed resend
+    await authService.logSecurityEvent(
+      null,
+      "VERIFICATION_EMAIL_RESEND_FAILED",
+      {
+        email: req.body.email,
+        error: error.message,
+      },
+      getClientIpAddress(req),
+      req.get("User-Agent")
+    );
+
+    res.status(400).json({
+      error: error.message || "Failed to resend verification email",
+    });
+  }
+}
+
 export default {
   register,
   login,
@@ -453,4 +555,6 @@ export default {
   revokeSession,
   cleanupExpiredSessions,
   testSessionActivity,
+  verifyEmail,
+  resendVerificationEmail,
 };

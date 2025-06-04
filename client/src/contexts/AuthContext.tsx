@@ -5,15 +5,15 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
+import axios from "axios";
+import type { AxiosRequestConfig } from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 interface User {
   userId: string;
   email: string;
-  username: string;
-  firstName?: string;
-  lastName?: string;
+  name: string;
   role: "user" | "admin" | "moderator";
   isVerified: boolean;
 }
@@ -21,8 +21,16 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    rememberMe?: boolean
+  ) => Promise<void>;
+  register: (
+    userData: RegisterData
+  ) => Promise<{ requiresEmailVerification: boolean; message: string }>;
+  verifyEmail: (token: string) => Promise<{ user: User; message: string }>;
+  resendVerificationEmail: (email: string) => Promise<{ message: string }>;
   logout: () => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<void>;
   changePassword: (
@@ -33,18 +41,10 @@ interface AuthContextType {
   isAuthenticated: boolean;
 }
 
-interface RequestConfig {
-  headers?: Record<string, string>;
-  url?: string;
-  [key: string]: unknown;
-}
-
 interface RegisterData {
   email: string;
-  username: string;
+  name: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -67,16 +67,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [accessToken, setAccessToken] = useState<string | null>(
     localStorage.getItem("accessToken")
   );
-
   const refreshToken = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await fetch(`${API_URL}/auth/refresh-token`, {
-        method: "POST",
-        credentials: "include",
-      });
+      const response = await axios.post(
+        `${API_URL}/auth/refresh-token`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.status === 200) {
+        const data = response.data;
         setAccessToken(data.accessToken);
         localStorage.setItem("accessToken", data.accessToken);
         return true;
@@ -91,17 +93,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const token = accessToken || localStorage.getItem("accessToken");
       if (token) {
-        await fetch(`${API_URL}/auth/logout`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
-          body: JSON.stringify({
+        await axios.post(
+          `${API_URL}/auth/logout`,
+          {
             userId: user?.userId, // Include user ID as backup
-          }),
-        });
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            withCredentials: true,
+          }
+        );
       }
     } catch (error) {
       console.error("Logout error:", error);
@@ -110,57 +114,60 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setAccessToken(null);
       localStorage.removeItem("accessToken");
     }
-  }, [accessToken, user?.userId]);
-  // Set up axios interceptor for automatic token handling
+  }, [accessToken, user?.userId]); // Set up axios interceptor for automatic token handling
   useEffect(() => {
     const setupInterceptors = () => {
       // Request interceptor to add token to headers
-      const requestInterceptor = (config: RequestConfig) => {
-        if (accessToken) {
-          config.headers = config.headers || {};
-          config.headers.Authorization = `Bearer ${accessToken}`;
-        }
-        return config;
-      };
+      const requestInterceptor = axios.interceptors.request.use(
+        (config) => {
+          if (accessToken) {
+            config.headers = config.headers || {};
+            config.headers.Authorization = `Bearer ${accessToken}`;
+          }
+          return config;
+        },
+        (error) => Promise.reject(error)
+      );
 
       // Response interceptor to handle token refresh
-      const responseInterceptor = (response: Response) => response;
+      const responseInterceptor = axios.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+          const originalRequest = error.config;
 
-      const responseErrorInterceptor = async (error: {
-        response?: { status: number };
-        config?: RequestConfig & { _retry?: boolean };
-      }) => {
-        const originalRequest = error.config;
+          if (
+            error.response?.status === 401 &&
+            originalRequest &&
+            !originalRequest._retry
+          ) {
+            originalRequest._retry = true;
 
-        if (
-          error.response?.status === 401 &&
-          originalRequest &&
-          !originalRequest._retry
-        ) {
-          originalRequest._retry = true;
-
-          const refreshed = await refreshToken();
-          if (refreshed && originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-            return fetch(
-              originalRequest.url || "",
-              originalRequest as RequestInit
-            );
-          } else {
-            await logout();
+            const refreshed = await refreshToken();
+            if (refreshed) {
+              const newToken = localStorage.getItem("accessToken");
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              return axios(originalRequest);
+            } else {
+              await logout();
+            }
           }
-        }
 
-        return Promise.reject(error);
-      };
+          return Promise.reject(error);
+        }
+      );
 
       return {
         requestInterceptor,
         responseInterceptor,
-        responseErrorInterceptor,
+        cleanup: () => {
+          axios.interceptors.request.eject(requestInterceptor);
+          axios.interceptors.response.eject(responseInterceptor);
+        },
       };
     };
-    setupInterceptors();
+
+    const interceptors = setupInterceptors();
+    return interceptors.cleanup;
   }, [accessToken, logout, refreshToken]); // Check if user is authenticated on app load
   useEffect(() => {
     const initAuth = async () => {
@@ -174,18 +181,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const refreshed = await refreshToken();
             if (!refreshed) {
               console.log("Token refresh failed, logging out...");
-              await logout();
+              // Explicitly clear user state and token
+              setUser(null);
+              setAccessToken(null);
+              localStorage.removeItem("accessToken");
             }
           }
         } catch (error) {
           console.error("Token verification failed:", error);
-          await logout();
+          // Explicitly clear user state and token on error
+          setUser(null);
+          setAccessToken(null);
+          localStorage.removeItem("accessToken");
         }
       }
       setLoading(false);
     };
     initAuth();
-  }, [logout, refreshToken]);
+  }, [refreshToken]);
 
   // Clear sensitive data on page unload for security
   useEffect(() => {
@@ -225,155 +238,260 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [user]);
-
   const makeAuthenticatedRequest = async (
     url: string,
-    options: RequestInit = {}
+    options: AxiosRequestConfig = {}
   ) => {
     const token = accessToken || localStorage.getItem("accessToken");
 
-    const config = {
+    const config: AxiosRequestConfig = {
       ...options,
       headers: {
         "Content-Type": "application/json",
         ...options.headers,
         ...(token && { Authorization: `Bearer ${token}` }),
       },
-      credentials: "include" as RequestCredentials,
+      withCredentials: true,
     };
 
-    let response = await fetch(`${API_URL}${url}`, config);
+    try {
+      const response = await axios({
+        url: `${API_URL}${url}`,
+        ...config,
+      });
 
-    // Handle token refresh if needed
-    if (response.status === 401 && token) {
-      const refreshed = await refreshToken();
-      if (refreshed) {
-        const newToken = localStorage.getItem("accessToken");
-        response = await fetch(`${API_URL}${url}`, {
-          ...config,
-          headers: {
-            ...config.headers,
-            Authorization: `Bearer ${newToken}`,
-          },
-        });
-      } else {
-        logout();
-        throw new Error("Authentication failed");
+      return response;
+    } catch (error) {
+      // Handle token refresh if needed
+      if (
+        axios.isAxiosError(error) &&
+        error.response?.status === 401 &&
+        token
+      ) {
+        const refreshed = await refreshToken();
+        if (refreshed) {
+          const newToken = localStorage.getItem("accessToken");
+          const retryConfig = {
+            ...config,
+            headers: {
+              ...config.headers,
+              Authorization: `Bearer ${newToken}`,
+            },
+          };
+          return await axios({
+            url: `${API_URL}${url}`,
+            ...retryConfig,
+          });
+        } else {
+          logout();
+          throw new Error("Authentication failed");
+        }
       }
+      throw error;
     }
-
-    return response;
   };
-
   const verifyToken = async (token: string): Promise<boolean> => {
     try {
-      const response = await fetch(`${API_URL}/auth/verify-token`, {
+      const response = await axios.get(`${API_URL}/auth/verify-token`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        credentials: "include",
+        withCredentials: true,
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.status === 200) {
+        const data = response.data;
         setUser(data.user);
         return true;
       }
+      // Clear user state when token is invalid
+      setUser(null);
       return false;
     } catch (error) {
       console.error("Token verification error:", error);
+      // Clear user state on error
+      setUser(null);
       return false;
     }
   };
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (
+    email: string,
+    password: string,
+    rememberMe: boolean = false
+  ): Promise<void> => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await axios.post(
+        `${API_URL}/auth/login`,
+        {
+          email,
+          password,
+          rememberMe,
         },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok) {
-        throw new Error(data.error || "Login failed");
+      // Check if user's email is verified
+      if (!data.user.isVerified) {
+        throw new Error(
+          "Please verify your email address before logging in. Check your inbox for the verification link."
+        );
       }
 
       setUser(data.user);
       setAccessToken(data.accessToken);
       localStorage.setItem("accessToken", data.accessToken);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      }
+      throw new Error("Login failed");
     } finally {
       setLoading(false);
     }
   };
-  const register = async (userData: RegisterData): Promise<void> => {
+  const register = async (
+    userData: RegisterData
+  ): Promise<{ requiresEmailVerification: boolean; message: string }> => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: "POST",
+      const response = await axios.post(`${API_URL}/auth/register`, userData, {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
-        body: JSON.stringify(userData),
+        withCredentials: true,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok) {
-        throw new Error(data.error || "Registration failed");
+      // Return registration result - don't auto-login if email verification is required
+      return {
+        requiresEmailVerification: data.requiresEmailVerification || false,
+        message: data.message,
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data?.error) {
+        throw new Error(error.response.data.error);
       }
-
-      // Auto-login after successful registration
-      await login(userData.email, userData.password);
+      throw new Error("Registration failed");
     } finally {
       setLoading(false);
     }
   };
+  const verifyEmail = async (
+    token: string
+  ): Promise<{ user: User; message: string }> => {
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${API_URL}/auth/verify-email`,
+        {
+          token,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
 
+      const data = response.data;
+
+      // Don't set user state - verification doesn't mean login
+      // The user should log in manually after verification
+
+      return {
+        user: data.user,
+        message: data.message,
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      }
+      throw new Error("Email verification failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const resendVerificationEmail = async (
+    email: string
+  ): Promise<{ message: string }> => {
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${API_URL}/auth/resend-verification`,
+        {
+          email,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      const data = response.data;
+
+      return {
+        message: data.message,
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      }
+      throw new Error("Failed to resend verification email");
+    } finally {
+      setLoading(false);
+    }
+  };
   const updateProfile = async (userData: Partial<User>): Promise<void> => {
     const response = await makeAuthenticatedRequest("/auth/profile", {
       method: "PUT",
-      body: JSON.stringify(userData),
+      data: userData,
     });
 
-    const data = await response.json();
+    const data = response.data;
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(data.error || "Profile update failed");
     }
 
     setUser(data.user);
   };
-
   const changePassword = async (
     currentPassword: string,
     newPassword: string
   ): Promise<void> => {
     const response = await makeAuthenticatedRequest("/auth/change-password", {
       method: "POST",
-      body: JSON.stringify({
+      data: {
         currentPassword,
         newPassword,
         confirmPassword: newPassword,
-      }),
+      },
     });
 
-    const data = await response.json();
-    if (!response.ok) {
+    const data = response.data;
+    if (response.status !== 200) {
       throw new Error(data.error || "Password change failed");
     }
   };
-
   const value: AuthContextType = {
     user,
     loading,
     login,
     register,
+    verifyEmail,
+    resendVerificationEmail,
     logout,
     updateProfile,
     changePassword,
