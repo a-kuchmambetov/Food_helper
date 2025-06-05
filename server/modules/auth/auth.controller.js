@@ -66,9 +66,20 @@ async function register(req, res) {
  * Login user (using Passport Local Strategy)
  */
 async function login(req, res) {
+  console.log("Login request received:", {
+    body: req.body,
+    user: req.user,
+    cookies: req.cookies,
+    headers: req.headers,
+  });
   try {
     // The user object is set by passport local strategy
     if (!req.user) {
+      // Check if there's an authentication message from passport
+      const authMessage = req.authInfo && req.authInfo.message;
+      if (authMessage) {
+        return res.status(401).json({ error: authMessage });
+      }
       return res.status(401).json({ error: "Invalid credentials" });
     }
     const { user, accessToken, refreshToken } = req.user;

@@ -1,6 +1,35 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuth";
+
+// Password validation function
+const validatePassword = (password: string) => {
+  const errors = [];
+
+  if (password.length < 8) {
+    errors.push("Password must be at least 8 characters long");
+  }
+
+  if (!/(?=.*[a-z])/.test(password)) {
+    errors.push("Password must contain at least one lowercase letter");
+  }
+
+  if (!/(?=.*[A-Z])/.test(password)) {
+    errors.push("Password must contain at least one uppercase letter");
+  }
+
+  if (!/(?=.*\d)/.test(password)) {
+    errors.push("Password must contain at least one number");
+  }
+
+  if (!/(?=.*[@$!%*?&])/.test(password)) {
+    errors.push(
+      "Password must contain at least one special character (@$!%*?&)"
+    );
+  }
+
+  return errors;
+};
 
 function Auth() {
   const navigate = useNavigate();
@@ -17,6 +46,8 @@ function Auth() {
   const [success, setSuccess] = useState("");
   const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
@@ -25,13 +56,31 @@ function Auth() {
   }, [isAuthenticated, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+
+    // Validate password on change for registration
+    if (name === "password" && !isLogin) {
+      const errors = validatePassword(value);
+      setPasswordErrors(errors);
+    }
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
     setLoading(true);
+
+    // Client-side password validation for registration
+    if (!isLogin) {
+      const errors = validatePassword(form.password);
+      if (errors.length > 0) {
+        setError("Please fix the password requirements listed below");
+        setPasswordErrors(errors);
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       if (isLogin) {
@@ -81,7 +130,9 @@ function Auth() {
     setSuccess("");
     setRegisteredEmail("");
     setIsLogin(true); // Set back to sign-in mode
+    setPasswordErrors([]);
   };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-black to-slate-900 px-4">
       <div className="w-full max-w-md">
@@ -148,12 +199,14 @@ function Auth() {
             /* Normal Auth Form */
             <>
               <div className="flex mb-6">
+                {" "}
                 <button
                   type="button"
                   onClick={() => {
                     setIsLogin(true);
                     setError("");
                     setSuccess("");
+                    setPasswordErrors([]);
                   }}
                   className={`flex-1 py-3 px-4 text-sm font-semibold rounded-lg transition-all duration-200 ${
                     isLogin
@@ -169,6 +222,7 @@ function Auth() {
                     setIsLogin(false);
                     setError("");
                     setSuccess("");
+                    setPasswordErrors([]);
                   }}
                   className={`flex-1 py-3 px-4 text-sm font-semibold rounded-lg transition-all duration-200 ml-2 ${
                     !isLogin
@@ -222,10 +276,69 @@ function Auth() {
                     type="password"
                     value={form.password}
                     onChange={handleChange}
-                    className="block w-full rounded-lg bg-zinc-800 border border-zinc-700 px-4 py-3 text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-700 focus:border-zinc-600 transition-all duration-200"
+                    className={`block w-full rounded-lg bg-zinc-800 border px-4 py-3 text-white placeholder-zinc-400 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                      !isLogin && passwordErrors.length > 0
+                        ? "border-red-500 focus:ring-red-500 focus:border-red-400"
+                        : "border-zinc-700 focus:ring-zinc-700 focus:border-zinc-600"
+                    }`}
                     placeholder="Enter your password"
                     required
                   />
+                  {/* Password requirements for registration */}
+                  {!isLogin && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-400 mb-2">
+                        Password must contain:
+                      </p>
+                      <div className="space-y-1">
+                        {[
+                          {
+                            test: (pwd: string) => pwd.length >= 8,
+                            text: "At least 8 characters",
+                          },
+                          {
+                            test: (pwd: string) => /(?=.*[a-z])/.test(pwd),
+                            text: "One lowercase letter",
+                          },
+                          {
+                            test: (pwd: string) => /(?=.*[A-Z])/.test(pwd),
+                            text: "One uppercase letter",
+                          },
+                          {
+                            test: (pwd: string) => /(?=.*\d)/.test(pwd),
+                            text: "One number",
+                          },
+                          {
+                            test: (pwd: string) => /(?=.*[@$!%*?&])/.test(pwd),
+                            text: "One special character (@$!%*?&)",
+                          },
+                        ].map((requirement, index) => {
+                          const isValid = requirement.test(form.password);
+                          return (
+                            <div
+                              key={index}
+                              className="flex items-center text-xs"
+                            >
+                              <span
+                                className={`mr-2 ${
+                                  isValid ? "text-green-400" : "text-red-400"
+                                }`}
+                              >
+                                {isValid ? "✓" : "✗"}
+                              </span>
+                              <span
+                                className={
+                                  isValid ? "text-green-400" : "text-gray-400"
+                                }
+                              >
+                                {requirement.text}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {isLogin && (

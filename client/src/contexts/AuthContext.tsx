@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import type { AxiosRequestConfig } from "axios";
 
@@ -49,13 +43,10 @@ interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+// Export AuthContext for use in useAuth.ts
+export { AuthContext };
+
+// useAuth hook moved to useAuth.ts for Fast Refresh compatibility
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -360,7 +351,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (
     userData: RegisterData
   ): Promise<{ requiresEmailVerification: boolean; message: string }> => {
-    setLoading(true);
     try {
       const response = await axios.post(`${API_URL}/auth/register`, userData, {
         headers: {
@@ -372,23 +362,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = response.data;
 
       // Return registration result - don't auto-login if email verification is required
-      return {
+      const result = {
         requiresEmailVerification: data.requiresEmailVerification || false,
         message: data.message,
       };
+      return result;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.data?.error) {
         throw new Error(error.response.data.error);
       }
       throw new Error("Registration failed");
-    } finally {
-      setLoading(false);
     }
   };
+
   const verifyEmail = async (
     token: string
   ): Promise<{ user: User; message: string }> => {
-    setLoading(true);
     try {
       const response = await axios.post(
         `${API_URL}/auth/verify-email`,
@@ -417,10 +406,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error(error.response.data.error);
       }
       throw new Error("Email verification failed");
-    } finally {
-      setLoading(false);
     }
   };
+
   const resendVerificationEmail = async (
     email: string
   ): Promise<{ message: string }> => {
@@ -453,6 +441,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(false);
     }
   };
+
   const updateProfile = async (userData: Partial<User>): Promise<void> => {
     const response = await makeAuthenticatedRequest("/auth/profile", {
       method: "PUT",
@@ -467,6 +456,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     setUser(data.user);
   };
+
   const changePassword = async (
     currentPassword: string,
     newPassword: string
@@ -485,6 +475,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw new Error(data.error || "Password change failed");
     }
   };
+
   const value: AuthContextType = {
     user,
     loading,

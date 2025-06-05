@@ -76,9 +76,19 @@ export const authenticateToken = passport.authenticate("jwt", {
 /**
  * Authentication middleware for login
  */
-export const authenticateLocal = passport.authenticate("local", {
-  session: false,
-});
+export const authenticateLocal = (req, res, next) => {
+  passport.authenticate("local", { session: false }, (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+
+    // Store user and auth info for the controller
+    req.user = user;
+    req.authInfo = info;
+
+    next();
+  })(req, res, next);
+};
 
 /**
  * Authorization middleware - check user roles

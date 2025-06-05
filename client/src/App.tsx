@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/AuthContext";
+import { useAuth } from "./contexts/useAuth";
 import Catalog from "./pages/Catalog";
 import Dish from "./pages/Dish";
 import Profile from "./pages/Profile";
@@ -12,7 +13,7 @@ import { useLocation } from "react-router-dom";
 
 // App Guard Component - protects the entire app
 function AppGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -23,16 +24,16 @@ function AppGuard({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, location.pathname, navigate]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-black to-slate-900">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-          <div className="text-white text-xl">Loading...</div>
-        </div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-black to-slate-900">
+  //       <div className="flex flex-col items-center space-y-4">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+  //         <div className="text-white text-xl">Loading...</div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // Allow access to auth page and email verification only when not authenticated
   if (
@@ -171,10 +172,12 @@ function Navigation() {
 
 // Main App Component
 function AppContent() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <AppGuard>
       <div className="flex flex-col min-h-screen bg-bg-primary text-white bg-gradient-to-br from-black to-slate-900">
-        <Navigation />
+        {isAuthenticated ? <Navigation /> : null}
 
         <Routes>
           <Route path="/auth" element={<Auth />} />
