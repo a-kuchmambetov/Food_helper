@@ -216,21 +216,6 @@ export const securityLogger = (req, res, next) => {
 };
 
 /**
- * IP whitelist middleware (for admin endpoints)
- */
-export const ipWhitelist = (allowedIPs = []) => {
-  return (req, res, next) => {
-    const clientIP = req.ip || req.connection.remoteAddress;
-
-    if (allowedIPs.length > 0 && !allowedIPs.includes(clientIP)) {
-      return res.status(403).json({ error: "IP address not allowed" });
-    }
-
-    next();
-  };
-};
-
-/**
  * Prevent parameter pollution
  */
 export const preventParameterPollution = (req, res, next) => {
@@ -255,6 +240,5 @@ export default {
   requestSizeLimit,
   sanitizeHeaders,
   securityLogger,
-  ipWhitelist,
   preventParameterPollution,
 };

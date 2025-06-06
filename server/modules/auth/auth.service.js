@@ -126,12 +126,12 @@ async function cleanupExpiredTokens() {
 async function registerUser({ email, name, password }) {
   // Check if user already exists
   const existingUser = await db.query(
-    "SELECT user_id FROM users WHERE email = $1 OR name = $2",
-    [email, name]
+    "SELECT user_id FROM users WHERE email = $1",
+    [email]
   );
 
   if (existingUser.rows.length > 0) {
-    throw new Error("User with this email or name already exists");
+    throw new Error("User with this email already exists");
   }
 
   // Hash password
@@ -157,7 +157,6 @@ async function registerUser({ email, name, password }) {
   );
 
   const user = result.rows[0];
-
   // Send verification email
   try {
     await emailService.sendVerificationEmail(
@@ -165,7 +164,6 @@ async function registerUser({ email, name, password }) {
       name,
       emailVerificationToken
     );
-    console.log(`Verification email sent to ${email}`);
   } catch (error) {
     console.error(`Failed to send verification email to ${email}:`, error);
     // Don't throw error here - user is still registered, they just need to request new verification email
@@ -306,8 +304,7 @@ async function loginUser({
 }) {
   // Get user with login attempt tracking
   const userResult = await db.query(
-    `SELECT user_id, email, name, password_hash, role, is_active, is_verified,
-     login_attempts, locked_until, failed_login_attempts
+    `SELECT user_id, email, name, password_hash, role, is_active, is_verified, locked_until, failed_login_attempts
      FROM users WHERE email = $1`,
     [email]
   );

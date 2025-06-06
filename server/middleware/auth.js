@@ -91,23 +91,6 @@ export const authenticateLocal = (req, res, next) => {
 };
 
 /**
- * Authorization middleware - check user roles
- */
-export const authorize = (...allowedRoles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
-    if (allowedRoles.length && !allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ error: "Insufficient permissions" });
-    }
-
-    next();
-  };
-};
-
-/**
  * Optional authentication middleware - doesn't fail if no token
  */
 export const optionalAuth = (req, res, next) => {
@@ -137,32 +120,6 @@ export const optionalAuth = (req, res, next) => {
   } catch (error) {
     next();
   }
-};
-
-/**
- * Check if user owns resource or has admin privileges
- */
-export const checkOwnership = (resourceUserIdField = "userId") => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
-    // Admin can access any resource
-    if (req.user.role === "admin") {
-      return next();
-    }
-
-    // Check if user owns the resource
-    const resourceUserId =
-      req.params[resourceUserIdField] || req.body[resourceUserIdField];
-
-    if (req.user.user_id !== resourceUserId) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    next();
-  };
 };
 
 /**
@@ -208,12 +165,8 @@ export const validateSession = async (req, res, next) => {
        LIMIT 1`,
       [req.user.user_id, ipAddress]
     );
-
     if (result.rows.length === 0) {
-      // Don't fail if no session found, just log it
-      console.warn(
-        `No active session found for user ${req.user.user_id} from IP ${ipAddress}`
-      );
+      // Session not found or expired, but don't fail the request
       return next();
     }
 
@@ -223,9 +176,6 @@ export const validateSession = async (req, res, next) => {
       [req.user.user_id, ipAddress]
     );
 
-    console.log(
-      `Updated last_activity for user ${req.user.user_id} from IP ${ipAddress}`
-    );
     next();
   } catch (error) {
     console.error("Session validation error:", error);
@@ -236,9 +186,7 @@ export const validateSession = async (req, res, next) => {
 export default {
   authenticateToken,
   authenticateLocal,
-  authorize,
   optionalAuth,
-  checkOwnership,
   getClientIpAddress,
   addRequestMetadata,
   validateSession,

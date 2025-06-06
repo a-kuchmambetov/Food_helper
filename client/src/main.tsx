@@ -30,7 +30,7 @@ function AllertBlock() {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      {isLocalStorageAvailable() === false ? AllertBlock() : <App />}
+      {isLocalStorageAvailable() === false ? <AllertBlock /> : <App />}
     </BrowserRouter>
   </StrictMode>
 );

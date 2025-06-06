@@ -79,6 +79,7 @@ function Catalog() {
   useEffect(() => {
     GetFiltersFromDB().then(setFilters);
   }, []);
+
   function handePageChange(page: number) {
     if (page < 1 || page > totalPages) {
       console.warn("Invalid page number:", page);
@@ -87,6 +88,7 @@ function Catalog() {
     setCurrentPage(page);
     sessionStorage.setItem(PAGINATIONPAGE_STORAGE_KEY, JSON.stringify(page));
   }
+
   const fetchCatalogDataWithFilters = useCallback(
     async (
       userFilters: Filters,
@@ -113,6 +115,7 @@ function Catalog() {
     },
     [filters, currentPage]
   );
+
   useEffect(() => {
     const savedFilters = localStorage.getItem(USERFILTERS_STORAGE_KEY);
     if (savedFilters) {

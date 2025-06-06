@@ -10,6 +10,7 @@ import EmailVerification from "./pages/EmailVerification";
 import { Settings02 } from "untitledui-js/react";
 import Footer from "./component/Footer";
 import { useLocation } from "react-router-dom";
+import Inventory from "./pages/Inventory";
 
 // App Guard Component - protects the entire app
 function AppGuard({ children }: { children: React.ReactNode }) {
@@ -188,7 +189,7 @@ function AppContent() {
           <Route path="/dish/:id" element={<Dish />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/planner" element={<Profile />} />
-          <Route path="/inventory" element={<Profile />} />
+          <Route path="/inventory" element={<Inventory />} />
           <Route path="/help" element={<Profile />} />
         </Routes>
 

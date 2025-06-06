@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS users (
     user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
-    name VARCHAR(100) UNIQUE NOT NULL,
+    name text NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'admin', 'moderator')),
     is_active BOOLEAN DEFAULT true,
@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS users (
     password_reset_token VARCHAR(255),
     password_reset_expires TIMESTAMP,
     last_login TIMESTAMP,
-    login_attempts INTEGER DEFAULT 0,
     locked_until TIMESTAMP,
     failed_login_attempts INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -102,6 +101,7 @@ CREATE TABLE MeasureUnits (
 CREATE TABLE Ingredients (
     ingredient_id SERIAL PRIMARY KEY,
     name TEXT UNIQUE NOT NULL,
+    calories DECIMAL(10,2) NOT NULL,
     measure_unit_id INTEGER NOT NULL REFERENCES MeasureUnits(measure_unit_id)
 	    ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -182,8 +182,13 @@ CREATE TABLE Prices (
 -- FROM pg_tables
 -- WHERE schemaname = 'public';
 
+
+-- TRUNCATE TABLE "user_sessions" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "security_audit_log" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "categories" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "dishes" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE "refresh_tokens" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "dishtastes" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "tastes" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "measureunits" RESTART IDENTITY CASCADE;
@@ -195,7 +200,3 @@ CREATE TABLE Prices (
 -- TRUNCATE TABLE "ingredientinventory" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "prices" RESTART IDENTITY CASCADE;
 -- TRUNCATE TABLE "currency" RESTART IDENTITY CASCADE;
--- TRUNCATE TABLE "user_sessions" RESTART IDENTITY CASCADE;
--- TRUNCATE TABLE "security_audit_log" RESTART IDENTITY CASCADE;
--- TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;
--- TRUNCATE TABLE "refresh_tokens" RESTART IDENTITY CASCADE;

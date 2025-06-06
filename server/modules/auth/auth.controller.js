@@ -66,12 +66,6 @@ async function register(req, res) {
  * Login user (using Passport Local Strategy)
  */
 async function login(req, res) {
-  console.log("Login request received:", {
-    body: req.body,
-    user: req.user,
-    cookies: req.cookies,
-    headers: req.headers,
-  });
   try {
     // The user object is set by passport local strategy
     if (!req.user) {
@@ -186,9 +180,7 @@ async function logout(req, res) {
   try {
     const refreshToken = req.cookies.refreshToken;
     const ipAddress = getClientIpAddress(req);
-    let userId = req.user?.user_id || req.body?.userId;
-
-    // If passport didn't set user, try to extract from JWT manually
+    let userId = req.user?.user_id || req.body?.userId; // If passport didn't set user, try to extract from JWT manually
     if (!userId) {
       const authHeader = req.headers.authorization;
       if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -199,20 +191,11 @@ async function logout(req, res) {
             audience: "food-helper-client",
           });
           userId = decoded.userId;
-          console.log("Extracted userId from JWT:", userId);
         } catch (jwtError) {
-          console.warn("Failed to decode JWT manually:", jwtError.message);
+          // JWT decode failed, continue without user ID
         }
       }
     }
-
-    console.log("Logout attempt:", {
-      hasRefreshToken: !!refreshToken,
-      hasUser: !!req.user,
-      userId: userId,
-      authHeader: req.headers.authorization ? "present" : "missing",
-      bodyUserId: req.body?.userId,
-    });
 
     // If we have a user ID, perform full logout
     if (userId) {
@@ -433,40 +416,6 @@ async function cleanupExpiredSessions(req, res) {
 }
 
 /**
- * Debug endpoint to test session activity updates
- */
-async function testSessionActivity(req, res) {
-  try {
-    const userId = req.user.user_id;
-    const ipAddress = getClientIpAddress(req);
-
-    // Get current session info
-    const result = await db.query(
-      `SELECT session_id, created_at, last_activity, expires_at, is_active
-       FROM user_sessions 
-       WHERE user_id = $1 AND ip_address = $2 AND is_active = true 
-       ORDER BY last_activity DESC
-       LIMIT 1`,
-      [userId, ipAddress]
-    );
-
-    res.json({
-      message: "Session activity test",
-      timestamp: new Date().toISOString(),
-      userId: userId,
-      ipAddress: ipAddress,
-      session: result.rows[0] || null,
-      hasSession: result.rows.length > 0,
-    });
-  } catch (error) {
-    console.error("Test session activity error:", error);
-    res.status(500).json({
-      error: "Failed to test session activity",
-    });
-  }
-}
-
-/**
  * Verify email address
  */
 async function verifyEmail(req, res) {
@@ -565,7 +514,6 @@ export default {
   getUserSessions,
   revokeSession,
   cleanupExpiredSessions,
-  testSessionActivity,
   verifyEmail,
   resendVerificationEmail,
 };

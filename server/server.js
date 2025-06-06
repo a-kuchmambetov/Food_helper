@@ -73,10 +73,12 @@ app.get("/health", (req, res) => {
 // Import and use routes
 import authRoutes from "./modules/auth/auth.routes.js";
 import dishesRoutes from "./modules/dishes/dishes.routes.js";
+import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 
 // API routes
 app.use(authRoutes);
 app.use(dishesRoutes);
+app.use(inventoryRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

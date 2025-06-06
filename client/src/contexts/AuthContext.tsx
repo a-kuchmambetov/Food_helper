@@ -190,7 +190,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
     initAuth();
   }, [refreshToken]);
-
   // Clear sensitive data on page unload for security
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -200,25 +199,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [user]);
-
-  // Handle browser tab/window close - cleanup session
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      // Clear any sensitive data on page unload if needed
-      // This is a security measure but localStorage will persist
-      // for legitimate single-page navigation
-    };
-
     const handleVisibilityChange = () => {
-      // Optional: You could implement session timeout on tab switch
-      // if (document.hidden && user) {
-      //   // Start session timeout timer
-      // }
+      // Optional: Implement session timeout on tab switch if needed
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);

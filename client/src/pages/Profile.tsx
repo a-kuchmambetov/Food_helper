@@ -103,21 +103,21 @@ function Profile() {
 
   if (loading || !user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-700">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-white text-xl">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-700 text-white p-4">
-      <div className="bg-slate-800 p-8 rounded-xl shadow-2xl max-w-2xl w-full">
+    <div className="flex flex-col items-center justify-center min-h-screen text-white p-4">
+      <div className="bg-zinc-900 border-2 border-zinc-800 p-8 rounded-xl shadow-2xl max-w-2xl w-full">
         {/* Profile Header */}{" "}
         <div className="flex flex-col items-center mb-8">
           <div className="w-32 h-32 rounded-full shadow-lg mb-4 border-4 border-sky-500 bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-4xl font-bold">
             {user.name.charAt(0).toUpperCase()}
           </div>
-          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-cyan-300 mb-1">
+          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-gray-300 from-60% to-gray-700 mb-1">
             {user.name}
           </h1>
           <p className="text-slate-400">{user.email}</p>
@@ -168,7 +168,7 @@ function Profile() {
                 onChange={(e) =>
                   setProfileData({ ...profileData, name: e.target.value })
                 }
-                className="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 focus:border-sky-500 focus:outline-none"
+                className="w-full p-3 rounded-lg bg-zinc-700 border border-zinc-600 focus:border-sky-500 focus:outline-none"
                 required
                 placeholder="Enter your name"
               />
@@ -182,7 +182,7 @@ function Profile() {
                 name="email"
                 type="email"
                 value={profileData.email}
-                className="w-full p-3 rounded-lg bg-slate-600 border border-slate-500 text-slate-400"
+                className="w-full p-3 rounded-lg bg-zinc-600 border border-zinc-500 text-slate-400"
                 disabled
                 title="Email cannot be changed"
               />
@@ -201,7 +201,7 @@ function Profile() {
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="flex-1 bg-slate-600 hover:bg-slate-700 text-white font-semibold py-3 rounded-lg transition duration-300"
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 rounded-lg transition duration-300"
               >
                 Cancel
               </button>
@@ -209,8 +209,8 @@ function Profile() {
           </form>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-slate-700 p-4 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold text-sky-400 mb-2">
+            <div className="bg-zinc-700 p-4 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-gray-300 mb-2">
                 Profile Information
               </h2>
               <div className="text-slate-300 text-sm space-y-2">
@@ -222,8 +222,8 @@ function Profile() {
                 </p>
               </div>
             </div>
-            <div className="bg-slate-700 p-4 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold text-sky-400 mb-2">
+            <div className="bg-zinc-700 p-4 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold text-gray-300 mb-2">
                 Account Details
               </h2>
               <div className="text-slate-300 text-sm space-y-2">
@@ -264,7 +264,7 @@ function Profile() {
                     currentPassword: e.target.value,
                   })
                 }
-                className="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 focus:border-sky-500 focus:outline-none"
+                className="w-full p-3 rounded-lg bg-zinc-700 border border-zinc-600 focus:border-sky-500 focus:outline-none"
                 required
                 placeholder="Enter your current password"
               />
@@ -286,7 +286,7 @@ function Profile() {
                     newPassword: e.target.value,
                   })
                 }
-                className="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 focus:border-sky-500 focus:outline-none"
+                className="w-full p-3 rounded-lg bg-zinc-700 border border-zinc-600 focus:border-sky-500 focus:outline-none"
                 required
                 minLength={6}
                 placeholder="Enter your new password"
@@ -309,7 +309,7 @@ function Profile() {
                     confirmPassword: e.target.value,
                   })
                 }
-                className="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 focus:border-sky-500 focus:outline-none"
+                className="w-full p-3 rounded-lg bg-zinc-700 border border-zinc-600 focus:border-sky-500 focus:outline-none"
                 required
                 minLength={6}
                 placeholder="Confirm your new password"
@@ -326,7 +326,7 @@ function Profile() {
               <button
                 type="button"
                 onClick={() => setIsChangingPassword(false)}
-                className="flex-1 bg-slate-600 hover:bg-slate-700 text-white font-semibold py-3 rounded-lg transition duration-300"
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 rounded-lg transition duration-300"
               >
                 Cancel
               </button>
@@ -339,13 +339,13 @@ function Profile() {
             <>
               <button
                 onClick={() => setIsEditing(true)}
-                className="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
+                className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
               >
                 Edit Profile
               </button>
               <button
                 onClick={() => setIsChangingPassword(true)}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
+                className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
               >
                 Change Password
               </button>
