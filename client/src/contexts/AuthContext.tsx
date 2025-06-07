@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import type { AxiosRequestConfig } from "axios";
+import type { AxiosRequestConfig, AxiosResponse } from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -32,6 +32,10 @@ interface AuthContextType {
     newPassword: string
   ) => Promise<void>;
   refreshToken: () => Promise<boolean>;
+  makeAuthenticatedRequest: (
+    url: string,
+    options?: AxiosRequestConfig
+  ) => Promise<AxiosResponse>;
   isAuthenticated: boolean;
 }
 
@@ -106,6 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem("accessToken");
     }
   }, [accessToken, user?.userId]); // Set up axios interceptor for automatic token handling
+  
   useEffect(() => {
     const setupInterceptors = () => {
       // Request interceptor to add token to headers
@@ -160,6 +165,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const interceptors = setupInterceptors();
     return interceptors.cleanup;
   }, [accessToken, logout, refreshToken]); // Check if user is authenticated on app load
+  
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem("accessToken");
@@ -190,13 +196,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
     initAuth();
   }, [refreshToken]);
+ 
   // Clear sensitive data on page unload for security
   useEffect(() => {
     const handleBeforeUnload = () => {
       // Only clear if user is not authenticated to avoid losing session unnecessarily
-      if (!user) {
-        localStorage.removeItem("accessToken");
-      }
+      // if (!user) {
+      //   localStorage.removeItem("accessToken");
+      // }
     };
 
     const handleVisibilityChange = () => {
@@ -469,6 +476,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateProfile,
     changePassword,
     refreshToken,
+    makeAuthenticatedRequest,
     isAuthenticated: !!user,
   };
 

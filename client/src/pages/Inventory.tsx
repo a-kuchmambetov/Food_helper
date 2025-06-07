@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useAuth } from "../contexts/useAuth";
 import Button from "../component/Button";
 import type { Ingredient, UserInventoryItem } from "../types/DbTypes";
 
-const API_URL = import.meta.env.VITE_API_URL;
-
 function Inventory() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, makeAuthenticatedRequest } = useAuth();
   const [userInventory, setUserInventory] = useState<UserInventoryItem[]>([]);
   const [allIngredients, setAllIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,13 +15,14 @@ function Inventory() {
   );
   const [quantity, setQuantity] = useState<string>("");
   const [adding, setAdding] = useState(false);
+
   // Fetch user inventory
   const fetchUserInventory = async () => {
     if (!isAuthenticated) return;
 
     try {
-      const response = await axios.get(`${API_URL}/inventory/user`, {
-        withCredentials: true,
+      const response = await makeAuthenticatedRequest("/inventory/user", {
+        method: "GET",
       });
       setUserInventory(response.data.data || []);
     } catch (err) {
@@ -38,7 +36,9 @@ function Inventory() {
     if (!isAuthenticated) return;
 
     try {
-      const response = await axios.get(`${API_URL}/inventory`, {});
+      const response = await makeAuthenticatedRequest("/inventory", {
+        method: "GET",
+      });
       setAllIngredients(response.data.data || []);
     } catch (err) {
       console.error("Failed to fetch ingredients:", err);
@@ -62,16 +62,13 @@ function Inventory() {
     setError(null);
 
     try {
-      await axios.post(
-        `${API_URL}/inventory/user`,
-        {
+      await makeAuthenticatedRequest("/inventory/user", {
+        method: "POST",
+        data: {
           ingredient_id: selectedIngredient,
           quantity: Number(quantity),
         },
-        {
-          withCredentials: true,
-        }
-      );
+      });
 
       // Refresh inventory after adding
       await fetchUserInventory();
@@ -87,6 +84,7 @@ function Inventory() {
       setAdding(false);
     }
   };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -98,19 +96,6 @@ function Inventory() {
       loadData();
     }
   }, [isAuthenticated]);
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-tertiary-600">
-            Please log in to view your inventory.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (

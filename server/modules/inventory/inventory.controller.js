@@ -18,6 +18,11 @@ const getAllIngredients = async (req, res) => {
 
 // Get ingredients owned by user
 const getUserIngredients = async (req, res) => {
+  console.log(
+    "Getting users ingredient from inventory",
+    req.body,
+    req.user?.user_id
+  );
   try {
     const userId = req.user?.user_id; // Assuming user ID comes from auth middleware
 
@@ -42,6 +47,7 @@ const getUserIngredients = async (req, res) => {
 
 // Add ingredient to user inventory
 const addIngredientToInventory = async (req, res) => {
+  console.log("Adding ingredient to inventory", req.body, req.user?.user_id);
   try {
     const userId = req.user?.user_id; // Assuming user ID comes from auth middleware
     const { ingredient_id, quantity } = req.body;

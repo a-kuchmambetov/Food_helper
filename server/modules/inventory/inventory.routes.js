@@ -5,17 +5,11 @@ import { authenticateToken, validateSession } from "../../middleware/auth.js";
 const router = express.Router();
 
 // Get all ingridients from general inventory
-router.get(
-  "/inventory",
-  authenticateToken,
-  validateSession,
-  invController.getAllIngredients
-);
+router.get("/inventory", authenticateToken, invController.getAllIngredients);
 // Get ingridient owned by user
 router.get(
   "/inventory/user",
   authenticateToken,
-  validateSession,
   invController.getUserIngredients
 );
 
@@ -23,7 +17,6 @@ router.get(
 router.post(
   "/inventory/user",
   authenticateToken,
-  validateSession,
   invController.addIngredientToInventory
 );
 
