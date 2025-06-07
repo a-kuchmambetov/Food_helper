@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../contexts/useAuth";
 import Button from "../component/Button";
 import type { Ingredient, UserInventoryItem } from "../types/DbTypes";
@@ -17,7 +17,7 @@ function Inventory() {
   const [adding, setAdding] = useState(false);
 
   // Fetch all available ingredients
-  const fetchAllIngredients = async () => {
+  const fetchAllIngredients = useCallback(async () => {
     if (!isAuthenticated) return;
 
     try {
@@ -29,10 +29,10 @@ function Inventory() {
       console.error("Failed to fetch ingredients:", err);
       setError("Failed to load ingredients");
     }
-  };
+  }, [isAuthenticated, makeAuthenticatedRequest]);
 
   // Fetch user inventory
-  const fetchUserInventory = async () => {
+  const fetchUserInventory = useCallback(async () => {
     if (!isAuthenticated) return;
 
     try {
@@ -44,7 +44,7 @@ function Inventory() {
       console.error("Failed to fetch user inventory:", err);
       setError("Failed to load your inventory");
     }
-  };
+  }, [isAuthenticated, makeAuthenticatedRequest]);
 
   // Add ingredient to inventory
   const addIngredientToInventory = async () => {
@@ -75,7 +75,7 @@ function Inventory() {
         return;
       }
 
-      setUserInventory(response.data.data || []);
+      fetchUserInventory(); // Refresh inventory after adding
       // Reset form
       setSelectedIngredient(null);
       setQuantity("");

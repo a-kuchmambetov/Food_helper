@@ -12,7 +12,7 @@ router.get(
 );
 
 // Get list of all dishes mathing query params for certain whole day
-// Get query params: 
+// Get query params:
 //  selected meals (breakfast, lunch, etc.); Default: all meals (breakfast, lunch, dinner, snack)
 //  custom amount of callories; Default: 2000
 //  taking into account user's ingredients; Default: false
@@ -23,11 +23,7 @@ router.get(
 );
 
 // Add a dish to user's meal plan
-router.post(
-  "/planner/add",
-  authenticateToken,
-  plannerController.addDishToPlan
-);
+router.post("/planner/add", authenticateToken, plannerController.addDishToPlan);
 
 // Remove a dish from user's meal plan
 router.delete(

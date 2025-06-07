@@ -11,6 +11,7 @@ import { Settings02 } from "untitledui-js/react";
 import Footer from "./component/Footer";
 import { useLocation } from "react-router-dom";
 import Inventory from "./pages/Inventory";
+import Planner from "./pages/Planner";
 
 // App Guard Component - protects the entire app
 function AppGuard({ children }: { children: React.ReactNode }) {
@@ -184,11 +185,11 @@ function AppContent() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/verify-email" element={<EmailVerification />} />
           {/* All other routes are now protected by AppGuard */}
-          <Route path="/" element={<Catalog />} />
+          <Route path="/" element={<Catalog />} />{" "}
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/dish/:id" element={<Dish />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/planner" element={<Profile />} />
+          <Route path="/planner" element={<Planner />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/help" element={<Profile />} />
         </Routes>
