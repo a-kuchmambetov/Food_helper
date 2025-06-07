@@ -20,4 +20,17 @@ router.post(
   invController.addIngredientToInventory
 );
 
+// Remove ingridient from user inventory
+router.delete(
+  "/inventory/user",
+  authenticateToken,
+  invController.removeIngredientFromInventory
+);
+
+// Update ingridient in user inventory
+router.put(
+  "/inventory/user",
+  authenticateToken,
+  invController.updateIngredientQuantity
+);
 export default router;

@@ -16,21 +16,6 @@ function Inventory() {
   const [quantity, setQuantity] = useState<string>("");
   const [adding, setAdding] = useState(false);
 
-  // Fetch user inventory
-  const fetchUserInventory = async () => {
-    if (!isAuthenticated) return;
-
-    try {
-      const response = await makeAuthenticatedRequest("/inventory/user", {
-        method: "GET",
-      });
-      setUserInventory(response.data.data || []);
-    } catch (err) {
-      console.error("Failed to fetch user inventory:", err);
-      setError("Failed to load your inventory");
-    }
-  };
-
   // Fetch all available ingredients
   const fetchAllIngredients = async () => {
     if (!isAuthenticated) return;
@@ -43,6 +28,21 @@ function Inventory() {
     } catch (err) {
       console.error("Failed to fetch ingredients:", err);
       setError("Failed to load ingredients");
+    }
+  };
+
+  // Fetch user inventory
+  const fetchUserInventory = async () => {
+    if (!isAuthenticated) return;
+
+    try {
+      const response = await makeAuthenticatedRequest("/inventory/user", {
+        method: "GET",
+      });
+      setUserInventory(response.data.data || []);
+    } catch (err) {
+      console.error("Failed to fetch user inventory:", err);
+      setError("Failed to load your inventory");
     }
   };
 
@@ -62,7 +62,7 @@ function Inventory() {
     setError(null);
 
     try {
-      await makeAuthenticatedRequest("/inventory/user", {
+      const response = await makeAuthenticatedRequest("/inventory/user", {
         method: "POST",
         data: {
           ingredient_id: selectedIngredient,
@@ -70,9 +70,12 @@ function Inventory() {
         },
       });
 
-      // Refresh inventory after adding
-      await fetchUserInventory();
+      if (response.data.error) {
+        setError(response.data.error);
+        return;
+      }
 
+      setUserInventory(response.data.data || []);
       // Reset form
       setSelectedIngredient(null);
       setQuantity("");
@@ -95,7 +98,7 @@ function Inventory() {
     if (isAuthenticated) {
       loadData();
     }
-  }, [isAuthenticated]);
+  }, [fetchAllIngredients, fetchUserInventory, isAuthenticated]);
 
   if (loading) {
     return (

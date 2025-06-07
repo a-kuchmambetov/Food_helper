@@ -60,8 +60,43 @@ const addIngredientToInventory = async (userId, ingredientId, quantity) => {
   }
 };
 
+// Remove an ingredient from user inventory
+const removeIngredientFromInventory = async (userId, ingredientId) => {
+  try {
+    const query = `
+            DELETE FROM IngredientInventory
+            WHERE user_id = $1 AND ingredient_id = $2
+            RETURNING *
+        `;
+    const result = await db.query(query, [userId, ingredientId]);
+    return result.rows[0];
+  } catch (error) {
+    throw new Error(
+      `Failed to remove ingredient from inventory: ${error.message}`
+    );
+  }
+};
+
+// Update the quantity of an ingredient in user inventory
+const updateIngredientQuantity = async (userId, ingredientId, quantity) => {
+  try {
+    const query = `
+            UPDATE IngredientInventory
+            SET quantity = $3
+            WHERE user_id = $1 AND ingredient_id = $2
+            RETURNING *
+        `;
+    const result = await db.query(query, [userId, ingredientId, quantity]);
+    return result.rows[0];
+  } catch (error) {
+    throw new Error(`Failed to update ingredient quantity: ${error.message}`);
+  }
+};
+
 export default {
   getAllIngredients,
   getUserIngredients,
   addIngredientToInventory,
+  removeIngredientFromInventory,
+  updateIngredientQuantity,
 };
