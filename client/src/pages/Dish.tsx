@@ -1,41 +1,36 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Button from "../component/Button";
 import Badge from "../component/CatalogTable/Badge";
+import { useAuth } from "../contexts/useAuth";
 
 import type { DishData } from "../types/DbTypes";
-
-async function GetDishDataFromDB(id: string): Promise<DishData> {
-  const API_URL = import.meta.env.VITE_API_URL;
-  return axios({
-    method: "get",
-    url: `${API_URL}/dish/${id}`,
-  })
-    .then((response) => {
-      if (response.status === 200) return response.data;
-      throw new Error("Failed to fetch dish data from the server");
-    })
-    .catch((error) => {
-      console.error("Error fetching dish data:", error);
-      return null; // Return null on error
-    });
-}
 
 function Dish() {
   const { id } = useParams();
   const [dishData, setDishData] = useState<DishData>({} as DishData);
   const navigate = useNavigate();
+  const { makeAuthenticatedRequest } = useAuth();
+
+  const fetchDishData = useCallback(async () => {
+    try {
+      const response = await makeAuthenticatedRequest(`/dish/${id}`);
+      setDishData(response.data as DishData);
+      console.log("Fetched dish data:", response.data);
+    } catch (err) {
+      console.error("Failed to fetch ingredients:", err);
+    }
+  }, [id, makeAuthenticatedRequest]);
 
   useEffect(() => {
     if (id) {
-      GetDishDataFromDB(id).then(setDishData);
+      fetchDishData();
     }
-  }, [id]);
+  }, [fetchDishData, id]);
 
   function goToDishPage() {
-    navigate(`/catalog`);
+    navigate(-1);
   }
 
   return (

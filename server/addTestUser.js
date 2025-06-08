@@ -1,7 +1,10 @@
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
+import * as db from "./db/db.js"; // Adjust the import based on your db module
 
 dotenv.config();
+
+const BCRYPT_SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS);
 
 async function hashPassword(password) {
   return await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
@@ -24,7 +27,7 @@ async function registerUser() {
   // Insert user
   const result = await db.query(
     `INSERT INTO users (email, name, password_hash, is_verified)
-     VALUES ($1, $2, $3, $4,)`,
+     VALUES ($1, $2, $3, $4)`,
     [
       "t@t.com",
       "Test User",

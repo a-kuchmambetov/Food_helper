@@ -9,15 +9,15 @@ async function getUserPlannedDishes(userId, date = null) {
         pd.dish_id,
         pd.meal_type_id,
         pd.date,
-        d.name AS dish_name,
-        d.description,
+        d.name AS name,
+        d.number_of_servings AS "numberOfServings",
         d.cooking_time AS "cookingTime",
         d.cooking_difficulty AS "cookingDifficulty",
-        mt.name AS meal_type,
+        mt.name AS "mealType",
         ARRAY_AGG(DISTINCT c.name) AS categories,
         ARRAY_AGG(DISTINCT t.name) AS tastes,
         -- Calculate total calories for the dish
-        COALESCE(SUM(i.calories * di.quantity), 0) AS total_calories
+        COALESCE(SUM(i.calories * di.quantity), 0) AS "totalCalories"
       FROM PlanedDishes pd
       JOIN Dishes d ON pd.dish_id = d.dish_id
       JOIN MealTypes mt ON pd.meal_type_id = mt.meal_type_id
@@ -38,7 +38,7 @@ async function getUserPlannedDishes(userId, date = null) {
 
     query += `
       GROUP BY pd.user_id, pd.dish_id, pd.meal_type_id, pd.date, 
-               d.name, d.description, d.cooking_time, d.cooking_difficulty, mt.name
+               d.name, d.number_of_servings, d.cooking_time, d.cooking_difficulty, mt.name, mt.meal_type_id
       ORDER BY pd.date DESC, mt.meal_type_id, d.name
     `;
 
@@ -53,76 +53,96 @@ async function getUserPlannedDishes(userId, date = null) {
 // Get recommended dishes based on meal types and calories
 async function getRecommendedDishes(
   userId,
-  mealTypes,
   targetCalories,
   useUserIngredients
 ) {
   try {
-    let baseQuery = `
-      SELECT 
-        d.dish_id AS id,
+    // Build parameter list and figure out which $-placeholder to use
+    const params = useUserIngredients
+      ? [userId, targetCalories]
+      : [targetCalories];
+    const calorieParam = useUserIngredients ? 2 : 1;
+
+    // 1) Base SELECT: add caloriesPerServing
+    let sql = `
+      SELECT
+        d.dish_id            AS id,
         d.name,
         d.description,
-        d.cooking_time AS "cookingTime",
+        d.cooking_time       AS "cookingTime",
         d.cooking_difficulty AS "cookingDifficulty",
+        d.number_of_servings AS "numberOfServings",
         ARRAY_AGG(DISTINCT c.name) AS categories,
         ARRAY_AGG(DISTINCT t.name) AS tastes,
-        COALESCE(SUM(i.calories * di.quantity), 0) AS total_calories,
+        -- total calories for the whole recipe
+        COALESCE(SUM(i.calories * di.quantity), 0) AS "totalCalories",
+        -- calories _per serving_
+        CASE
+          WHEN d.number_of_servings > 0
+          THEN COALESCE(SUM(i.calories * di.quantity), 0) / d.number_of_servings
+          ELSE 0
+        END AS "caloriesPerServing",
         COUNT(DISTINCT di.ingredient_id) AS total_ingredients
     `;
 
+    // 1.a) If using user’s pantry, include match %
     if (useUserIngredients) {
-      baseQuery += `,
+      sql += `,
         COUNT(DISTINCT ii.ingredient_id) AS available_ingredients,
-        CASE 
-          WHEN COUNT(DISTINCT di.ingredient_id) > 0 
-          THEN (COUNT(DISTINCT ii.ingredient_id)::float / COUNT(DISTINCT di.ingredient_id) * 100)::int
+        CASE
+          WHEN COUNT(DISTINCT di.ingredient_id) > 0
+          THEN (COUNT(DISTINCT ii.ingredient_id)::float
+                 / COUNT(DISTINCT di.ingredient_id) * 100)::int
           ELSE 0
         END AS ingredients_match_percentage
       `;
     }
 
-    baseQuery += `
+    // 2) Joins
+    sql += `
       FROM Dishes d
-      LEFT JOIN Categories c ON d.category_id = c.category_id
-      LEFT JOIN DishTastes dt ON d.dish_id = dt.dish_id
-      LEFT JOIN Tastes t ON dt.taste_id = t.taste_id
-      LEFT JOIN DishIngredients di ON d.dish_id = di.dish_id
-      LEFT JOIN Ingredients i ON di.ingredient_id = i.ingredient_id
+      LEFT JOIN Categories c        ON d.category_id   = c.category_id
+      LEFT JOIN DishTastes dt       ON d.dish_id       = dt.dish_id
+      LEFT JOIN Tastes t            ON dt.taste_id     = t.taste_id
+      LEFT JOIN DishIngredients di  ON d.dish_id       = di.dish_id
+      LEFT JOIN Ingredients i       ON di.ingredient_id = i.ingredient_id
     `;
 
     if (useUserIngredients) {
-      baseQuery += `
-        LEFT JOIN IngredientInventory ii ON di.ingredient_id = ii.ingredient_id 
-                                         AND ii.user_id = $1
+      sql += `
+        LEFT JOIN IngredientInventory ii
+          ON ii.ingredient_id = di.ingredient_id
+         AND ii.user_id       = $1
       `;
     }
 
-    baseQuery += `
-      WHERE 1=1
-      GROUP BY d.dish_id, d.name, d.description, d.cooking_time, d.cooking_difficulty
-      HAVING COALESCE(SUM(i.calories * di.quantity), 0) <= $${
-        useUserIngredients ? 2 : 1
-      }
+    // 3) Group, filter on caloriesPerServing, and order
+    sql += `
+      GROUP BY
+        d.dish_id,
+        d.name,
+        d.description,
+        d.cooking_time,
+        d.cooking_difficulty,
+        d.number_of_servings
+      HAVING
+        -- keep only those whose per-serving calories ≤ targetCalories
+        (CASE
+           WHEN d.number_of_servings > 0
+           THEN SUM(i.calories * di.quantity) / d.number_of_servings
+           ELSE 0
+         END) <= $${calorieParam}
+      ORDER BY
     `;
 
     if (useUserIngredients) {
-      baseQuery += `
-        ORDER BY ingredients_match_percentage DESC, total_calories ASC
-        LIMIT 20
-      `;
+      sql += `ingredients_match_percentage DESC, "caloriesPerServing" ASC`;
     } else {
-      baseQuery += `
-        ORDER BY total_calories ASC
-        LIMIT 20
-      `;
+      sql += `"caloriesPerServing" ASC`;
     }
 
-    const params = useUserIngredients
-      ? [userId, targetCalories]
-      : [targetCalories];
-    const result = await db.query(baseQuery, params);
-
+    // 4) **NO** LIMIT → returns _all_ matching dishes
+    const result = await db.query(sql, params);
     return result.rows;
   } catch (error) {
     console.error("Error fetching recommended dishes:", error);
@@ -133,21 +153,17 @@ async function getRecommendedDishes(
 // Add dish to meal plan
 async function addDishToPlan(userId, dishId, mealTypeId, date) {
   try {
-    // Check if dish already exists for this user, meal type, and date
+    // Check if any dish already exists for this user, meal type, and date
     const existingQuery = `
-      SELECT 1 FROM PlanedDishes 
-      WHERE user_id = $1 AND dish_id = $2 AND meal_type_id = $3 AND date = $4
+      SELECT d.name FROM PlanedDishes pd
+      JOIN Dishes d ON pd.dish_id = d.dish_id
+      WHERE pd.user_id = $1 AND pd.meal_type_id = $2 AND pd.date = $3
     `;
-    const existing = await db.query(existingQuery, [
-      userId,
-      dishId,
-      mealTypeId,
-      date,
-    ]);
+    const existing = await db.query(existingQuery, [userId, mealTypeId, date]);
 
     if (existing.rows.length > 0) {
       throw new Error(
-        "Dish already exists in the meal plan for this date and meal type"
+        `A dish "${existing.rows[0].name}" is already planned for this meal type. Please remove it first to add a new dish.`
       );
     }
 

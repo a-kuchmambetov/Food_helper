@@ -106,9 +106,7 @@ export const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
       process.env.CLIENT_URL,
-      "http://localhost:5173",
       "https://localhost:5173",
-      "http://localhost:3000",
       // Production domains
       "https://food_helper.kuchmambetov.dev",
       "https://api_food_helper.kuchmambetov.dev",

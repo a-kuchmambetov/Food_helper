@@ -7,6 +7,7 @@ import Dish from "./pages/Dish";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import EmailVerification from "./pages/EmailVerification";
+import Help from "./pages/Help";
 import { Settings02 } from "untitledui-js/react";
 import Footer from "./component/Footer";
 import { useLocation } from "react-router-dom";
@@ -191,7 +192,7 @@ function AppContent() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/planner" element={<Planner />} />
           <Route path="/inventory" element={<Inventory />} />
-          <Route path="/help" element={<Profile />} />
+          <Route path="/help" element={<Help />} />
         </Routes>
 
         <Footer />

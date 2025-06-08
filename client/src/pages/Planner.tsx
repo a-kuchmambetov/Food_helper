@@ -29,9 +29,9 @@ function Planner() {
   const [success, setSuccess] = useState<string | null>(null);
 
   // Recommendation filters
-  const [selectedMealTypes, setSelectedMealTypes] = useState<string[]>([]);
+  // const [selectedMealTypes, setSelectedMealTypes] = useState<string[]>([]);
   const [targetCalories, setTargetCalories] = useState<number>(2000);
-  const [useUserIngredients, setUseUserIngredients] = useState<boolean>(false);
+  // const [useUserIngredients, setUseUserIngredients] = useState<boolean>(false);
   const [showRecommendations, setShowRecommendations] =
     useState<boolean>(false);
 
@@ -52,8 +52,8 @@ function Planner() {
       setMealTypes(response.data || []);
 
       // Initialize selected meal types with all available types
-      const allMealNames = (response.data || []).map((mt: MealType) => mt.name);
-      setSelectedMealTypes(allMealNames);
+      // const allMealNames = (response.data || []).map((mt: MealType) => mt.name);
+      // setSelectedMealTypes(allMealNames);
     } catch (err) {
       console.error("Failed to fetch meal types:", err);
       setError("Failed to load meal types");
@@ -65,22 +65,21 @@ function Planner() {
     async (date: string) => {
       try {
         const response = await makeAuthenticatedRequest(
-          `/planner/user?date=${date}`,
-          { method: "GET" }
+          `/planner/user?date=${date}`
         );
 
-        const plannedDishes: PlannedDish[] = response.data?.plannedDishes || [];
+        const plannedDishes: PlannedDish[] = response.data || [];
 
         // Group dishes by meal type and calculate total calories
         const meals: { [mealType: string]: PlannedDish[] } = {};
         let totalCalories = 0;
 
         plannedDishes.forEach((dish) => {
-          if (!meals[dish.meal_type_name]) {
-            meals[dish.meal_type_name] = [];
+          if (!meals[dish.mealType]) {
+            meals[dish.mealType] = [];
           }
-          meals[dish.meal_type_name].push(dish);
-          totalCalories += dish.calories || 0;
+          meals[dish.mealType].push(dish);
+          totalCalories += dish.totalCalories / dish.numberOfServings || 0;
         });
 
         setDayPlan({
@@ -97,12 +96,14 @@ function Planner() {
   );
 
   // Fetch recommended dishes
-  const fetchRecommendedDishes = async () => {
+  const fetchRecommendedDishes = useCallback(async () => {
     try {
       const params = new URLSearchParams({
-        meals: selectedMealTypes.join(","),
-        calories: targetCalories.toString(),
-        useUserIngredients: useUserIngredients.toString(),
+        calories: (
+          targetCalories -
+          (dayPlan?.totalCalories || 0) +
+          100
+        ).toString(),
       });
 
       const response = await makeAuthenticatedRequest(
@@ -115,7 +116,8 @@ function Planner() {
       console.error("Failed to fetch recommended dishes:", err);
       setError("Failed to load recommended dishes");
     }
-  };
+  }, [dayPlan?.totalCalories, makeAuthenticatedRequest, targetCalories]);
+
   // Add dish to meal plan
   const addDishToPlan = async (
     dishId: number,
@@ -139,7 +141,6 @@ function Planner() {
 
       // Refresh the plan
       await fetchPlannedDishes(selectedDate);
-
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: unknown) {
@@ -153,7 +154,18 @@ function Planner() {
         "status" in err.response &&
         err.response.status === 409
       ) {
-        setError("This dish is already planned for this meal!");
+        // Get the error message from the server response
+        const errorMessage =
+          err.response &&
+          typeof err.response === "object" &&
+          "data" in err.response &&
+          err.response.data &&
+          typeof err.response.data === "object" &&
+          "error" in err.response.data &&
+          typeof err.response.data.error === "string"
+            ? err.response.data.error
+            : "Only one dish per meal type is allowed!";
+        setError(errorMessage);
       } else {
         setError("Failed to add dish to meal plan");
       }
@@ -180,22 +192,12 @@ function Planner() {
 
       // Refresh the plan
       await fetchPlannedDishes(selectedDate);
-
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Failed to remove dish from plan:", err);
       setError("Failed to remove dish from meal plan");
     }
-  };
-
-  // Handle meal type selection for recommendations
-  const handleMealTypeToggle = (mealTypeName: string) => {
-    setSelectedMealTypes((prev) =>
-      prev.includes(mealTypeName)
-        ? prev.filter((mt) => mt !== mealTypeName)
-        : [...prev, mealTypeName]
-    );
   };
 
   // Open add dish modal
@@ -235,6 +237,10 @@ function Planner() {
     setSelectedDate(newDate);
     fetchPlannedDishes(newDate);
   };
+
+  useEffect(() => {
+    fetchRecommendedDishes();
+  }, [dayPlan?.totalCalories, fetchRecommendedDishes]);
 
   // Auto-clear error messages
   useEffect(() => {
@@ -307,7 +313,7 @@ function Planner() {
                   <div className="text-sm text-gray-400">
                     Total:{" "}
                     <span className="text-yellow-400 font-semibold">
-                      {dayPlan?.totalCalories || 0} calories
+                      {(dayPlan?.totalCalories || 0).toFixed(0)} calories
                     </span>
                   </div>
                 </div>
@@ -343,24 +349,41 @@ function Planner() {
                       const mealsForType = dayPlan.meals[mealType.name] || [];
                       return (
                         <div
-                          key={mealType.meal_type_id}
+                          key={mealType.id}
                           className="border border-zinc-700 rounded-lg"
                         >
+                          {" "}
                           <div className="bg-zinc-800 px-4 py-3 border-b border-zinc-700">
-                            <h3 className="font-semibold text-lg">
-                              {mealType.name}
-                            </h3>
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-semibold text-lg">
+                                {mealType.name}
+                              </h3>
+                              {mealsForType.length > 0 && (
+                                <span className="px-2 py-1 bg-green-600 text-green-100 text-xs rounded-full">
+                                  ✓ Planned
+                                </span>
+                              )}
+                            </div>
                             <p className="text-sm text-gray-400">
-                              {mealsForType.length}{" "}
-                              {mealsForType.length === 1 ? "dish" : "dishes"} •{" "}
-                              {mealsForType.reduce(
-                                (sum, dish) => sum + (dish.calories || 0),
-                                0
-                              )}{" "}
-                              calories
+                              {mealsForType.length > 0 ? (
+                                <>
+                                  1 dish •{" "}
+                                  {mealsForType
+                                    .reduce(
+                                      (sum, dish) =>
+                                        sum +
+                                        (dish.totalCalories /
+                                          dish.numberOfServings || 0),
+                                      0
+                                    )
+                                    .toFixed(0)}{" "}
+                                  calories
+                                </>
+                              ) : (
+                                "No dish planned"
+                              )}
                             </p>
                           </div>
-
                           <div className="p-4">
                             {mealsForType.length === 0 ? (
                               <p className="text-gray-500 text-center py-4">
@@ -431,44 +454,6 @@ function Planner() {
                       placeholder="2000"
                     />
                   </div>
-                  {/* Meal Types */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Meal Types
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {mealTypes.map((mealType) => (
-                        <label
-                          key={mealType.meal_type_id}
-                          className="flex items-center"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedMealTypes.includes(mealType.name)}
-                            onChange={() => handleMealTypeToggle(mealType.name)}
-                            className="mr-2"
-                          />
-                          <span className="text-sm">{mealType.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  {/* Use User Ingredients */}
-                  <div>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={useUserIngredients}
-                        onChange={(e) =>
-                          setUseUserIngredients(e.target.checked)
-                        }
-                        className="mr-2"
-                      />
-                      <span className="text-sm">
-                        Prioritize dishes I can make with my ingredients
-                      </span>
-                    </label>
-                  </div>
                 </div>
 
                 {/* Get Recommendations Button */}
@@ -496,7 +481,7 @@ function Planner() {
                       <div className="space-y-3 max-h-96 overflow-y-auto">
                         {recommendedDishes.map((dish) => (
                           <RecommendationCard
-                            key={dish.dish_id}
+                            key={dish.id}
                             dish={dish}
                             onAddToPlan={openAddModal}
                             onDishClick={goToDish}
@@ -517,7 +502,7 @@ function Planner() {
             <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-6 max-w-md w-full">
               <h3 className="text-xl font-semibold mb-4">
                 Add "{selectedDish.name}" to Plan
-              </h3>
+              </h3>{" "}
               <div className="mb-4">
                 <label
                   htmlFor="meal-type-select"
@@ -534,24 +519,34 @@ function Planner() {
                   className="w-full px-3 py-2 bg-zinc-800 border border-zinc-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
                   title="Select meal type for this dish"
                 >
-                  <option value="">Choose a meal type...</option>
-                  {mealTypes.map((mealType) => (
-                    <option
-                      key={mealType.meal_type_id}
-                      value={mealType.meal_type_id}
-                    >
-                      {mealType.name}
-                    </option>
-                  ))}
+                  <option value="">Choose a meal type...</option>{" "}
+                  {mealTypes.map((mealType) => {
+                    const hasExistingDish =
+                      (dayPlan?.meals?.[mealType.name]?.length ?? 0) > 0;
+                    return (
+                      <option
+                        key={mealType.id}
+                        value={mealType.id}
+                        disabled={hasExistingDish}
+                      >
+                        {mealType.name}
+                        {hasExistingDish ? " (Already has a dish)" : ""}
+                      </option>
+                    );
+                  })}
                 </select>
+                {/* Warning message for disabled options */}
+                <p className="text-sm text-yellow-400 mt-2">
+                  Note: Each meal type can only have one dish. Remove existing
+                  dishes to add new ones.
+                </p>
               </div>
-
               <div className="flex gap-4">
                 <button
                   onClick={() => {
                     if (selectedMealTypeForAdd) {
                       addDishToPlan(
-                        selectedDish.dish_id,
+                        selectedDish.id,
                         selectedMealTypeForAdd,
                         selectedDate
                       );

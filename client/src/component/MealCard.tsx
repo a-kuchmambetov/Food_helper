@@ -16,7 +16,7 @@ function MealCard({ dish, onRemove, onDishClick }: MealCardProps) {
             className="font-medium text-white cursor-pointer hover:text-blue-400 transition-colors mb-2"
             onClick={() => onDishClick(dish.dish_id)}
           >
-            {dish.dish_name}
+            {dish.name}
           </h4>
 
           <div className="flex flex-wrap gap-2 mb-3">
@@ -43,7 +43,7 @@ function MealCard({ dish, onRemove, onDishClick }: MealCardProps) {
                   d="M13 10V3L4 14h7v7l9-11h-7z"
                 />
               </svg>
-              {dish.calories} cal
+              {(dish.totalCalories / dish.numberOfServings).toFixed(0)} cal
             </span>
             <span className="flex items-center">
               <svg

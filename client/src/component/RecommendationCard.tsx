@@ -16,7 +16,7 @@ function RecommendationCard({
     <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-3 hover:bg-zinc-700/50 transition-colors">
       <h4
         className="font-medium text-white cursor-pointer hover:text-blue-400 transition-colors mb-2"
-        onClick={() => onDishClick(dish.dish_id)}
+        onClick={() => onDishClick(dish.id)}
       >
         {dish.name}
       </h4>
@@ -51,7 +51,8 @@ function RecommendationCard({
               d="M13 10V3L4 14h7v7l9-11h-7z"
             />
           </svg>
-          {dish.calories} cal
+          {(dish.totalCalories / dish.numberOfServings).toFixed(0)} cal per
+          serving
         </span>
         <span className="flex items-center">
           <svg

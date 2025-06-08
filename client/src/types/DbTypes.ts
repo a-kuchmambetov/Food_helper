@@ -34,34 +34,35 @@ export interface UserInventoryItem {
 }
 
 export interface MealType {
-  meal_type_id: number;
+  id: number;
   name: string;
 }
 
 export interface PlannedDish {
-  planned_dish_id: number;
+  user_id: number;
   dish_id: number;
-  dish_name: string;
   meal_type_id: number;
-  meal_type_name: string;
   date: string;
-  calories: number;
-  categories: string[];
-  tastes: string[];
+  name: string;
+  numberOfServings: number;
   cookingTime: number;
   cookingDifficulty: number;
+  mealType: string;
+  categories: string[];
+  tastes: string[];
+  totalCalories: number;
 }
 
 export interface RecommendedDish {
-  dish_id: number;
+  id: number;
   name: string;
   description: string;
-  calories: number;
-  categories: string[];
-  tastes: string[];
   cookingTime: number;
   cookingDifficulty: number;
-  meal_type_name?: string;
+  numberOfServings: number;
+  categories: string[];
+  tastes: string[];
+  totalCalories: number;
 }
 
 export interface DayPlan {

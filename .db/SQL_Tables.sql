@@ -76,6 +76,7 @@ CREATE TABLE Dishes (
     description TEXT,
     cooking_difficulty INTEGER,
     cooking_time INTEGER,
+    number_of_servings INTEGER,
     category_id INTEGER REFERENCES Categories(category_id)
         ON UPDATE CASCADE
 );

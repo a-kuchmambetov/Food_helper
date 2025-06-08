@@ -21,19 +21,13 @@ async function getUserPlannedDishes(req, res) {
 async function getRecommendedDishes(req, res) {
   try {
     const userId = req.user.user_id;
-    const {
-      meals = ["Breakfast", "Lunch", "Dinner", "Snack"],
-      calories = 2000,
-      useUserIngredients = false,
-    } = req.query;
+    const { calories = 2000, useUserIngredients = false } = req.query;
 
-    const mealTypes = Array.isArray(meals) ? meals : [meals];
     const targetCalories = parseInt(calories);
     const useIngredients = useUserIngredients === "true";
 
     const recommendedDishes = await plannerService.getRecommendedDishes(
       userId,
-      mealTypes,
       targetCalories,
       useIngredients
     );

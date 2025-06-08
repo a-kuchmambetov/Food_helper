@@ -12,10 +12,7 @@ router.get(
 );
 
 // Get list of all dishes mathing query params for certain whole day
-// Get query params:
-//  selected meals (breakfast, lunch, etc.); Default: all meals (breakfast, lunch, dinner, snack)
-//  custom amount of callories; Default: 2000
-//  taking into account user's ingredients; Default: false
+// Get query params: custom amount of callories; Default: 2000
 router.get(
   "/planner/dishes",
   authenticateToken,

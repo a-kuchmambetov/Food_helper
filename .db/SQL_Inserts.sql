@@ -223,44 +223,44 @@ INSERT INTO Ingredients (name, calories, measure_unit_id) VALUES
 
 -- Dishes
 -- Main Courses (category_id = 1)
-INSERT INTO Dishes (name, description, cooking_difficulty, cooking_time, category_id) VALUES
-  ('Spaghetti Bolognese',    'Classic Italian pasta with rich meat sauce.',                    3, 45, 1),
-  ('Grilled Chicken Breast',  'Marinated chicken breast grilled to juicy perfection.',           2, 30, 1),
-  ('Beef Steak with Herb Butter','Pan-seared ribeye topped with garlic-herb butter.',            4, 25, 1),
-  ('Salmon Fillet with Lemon Dill Sauce','Pan-roasted salmon with a zesty dill-lemon glaze.', 3, 20, 1),
-  ('Vegetable Stir Fry',      'Colorful mix of vegetables stir-fried in soy-ginger sauce.',      2, 25, 1),
-  ('Chicken Curry',           'Fragrant curry with tender chicken pieces and coconut milk.',     3, 40, 1),
-  ('Beef Tacos',              'Soft tortillas filled with seasoned beef, lettuce, and cheese.',  2, 20, 1),
-  ('Mushroom Risotto',        'Creamy Arborio rice cooked with mushrooms and Parmesan.',        4, 50, 1),
-  ('Pork Chops with Apple Sauce','Pan-fried pork chops served with homemade apple compote.',      3, 35, 1),
-  ('Lamb Chops with Rosemary','Grilled lamb chops seasoned with fresh rosemary and garlic.',    4, 30, 1),
-  ('Vegetarian Lasagna',      'Layered pasta with mixed vegetables and three cheeses.',          3, 60, 1);
+INSERT INTO Dishes (name, description, cooking_difficulty, cooking_time, category_id, number_of_servings) VALUES
+  ('Spaghetti Bolognese',    'Classic Italian pasta with rich meat sauce.',                    2, 45, 1, 4),
+  ('Grilled Chicken Breast',  'Marinated chicken breast grilled to juicy perfection.',           1, 30, 1, 2),
+  ('Beef Steak with Herb Butter','Pan-seared ribeye topped with garlic-herb butter.',            3, 25, 1, 2),
+  ('Salmon Fillet with Lemon Dill Sauce','Pan-roasted salmon with a zesty dill-lemon glaze.', 2, 20, 1, 2),
+  ('Vegetable Stir Fry',      'Colorful mix of vegetables stir-fried in soy-ginger sauce.',      1, 25, 1, 2),
+  ('Chicken Curry',           'Fragrant curry with tender chicken pieces and coconut milk.',     2, 40, 1, 4),
+  ('Beef Tacos',              'Soft tortillas filled with seasoned beef, lettuce, and cheese.',  1, 20, 1, 4),
+  ('Mushroom Risotto',        'Creamy Arborio rice cooked with mushrooms and Parmesan.',        3, 50, 1, 2),
+  ('Pork Chops with Apple Sauce','Pan-fried pork chops served with homemade apple compote.',      2, 35, 1, 2),
+  ('Lamb Chops with Rosemary','Grilled lamb chops seasoned with fresh rosemary and garlic.',    3, 30, 1, 2),
+  ('Vegetarian Lasagna',      'Layered pasta with mixed vegetables and three cheeses.',          2, 60, 1, 6);
 
 -- Soups (category_id = 2)
-INSERT INTO Dishes (name, description, cooking_difficulty, cooking_time, category_id) VALUES
-  ('Tomato Soup',           'Smooth tomato base with herbs, served hot.',                   1, 30, 2),
-  ('Chicken Noodle Soup',   'Comforting broth with chicken chunks and egg noodles.',       1, 40, 2),
-  ('Cream of Mushroom Soup','Rich and silky soup made from blended mushrooms.',             2, 35, 2),
-  ('Minestrone Soup',       'Hearty vegetable soup with beans and pasta.',                 2, 45, 2),
-  ('French Onion Soup',     'Caramelized onions in beef broth topped with melted cheese.',  3, 60, 2);
+INSERT INTO Dishes (name, description, cooking_difficulty, cooking_time, category_id, number_of_servings) VALUES
+  ('Tomato Soup',           'Smooth tomato base with herbs, served hot.',                   1, 30, 2, 4),
+  ('Chicken Noodle Soup',   'Comforting broth with chicken chunks and egg noodles.',       1, 40, 2, 4),
+  ('Cream of Mushroom Soup','Rich and silky soup made from blended mushrooms.',             1, 35, 2, 4),
+  ('Minestrone Soup',       'Hearty vegetable soup with beans and pasta.',                 1, 45, 2, 6),
+  ('French Onion Soup',     'Caramelized onions in beef broth topped with melted cheese.',  2, 60, 2, 4);
 
 -- Desserts (category_id = 3)
-INSERT INTO Dishes (name, description, cooking_difficulty, cooking_time, category_id) VALUES
-  ('Chocolate Cake',       'Moist chocolate sponge layered with chocolate ganache.',      3, 60, 3),
-  ('Apple Pie',            'Classic pie with cinnamon-spiced apples and flaky crust.',    3, 50, 3),
-  ('Classic Cheesecake',   'Creamy cheesecake on a buttery graham cracker crust.',        4, 90, 3),
-  ('Tiramisu',             'Coffee-soaked ladyfingers layered with mascarpone cream.',    4, 30, 3);
+INSERT INTO Dishes (name, description, cooking_difficulty, cooking_time, category_id, number_of_servings) VALUES
+  ('Chocolate Cake',       'Moist chocolate sponge layered with chocolate ganache.',      2, 60, 3, 8),
+  ('Apple Pie',            'Classic pie with cinnamon-spiced apples and flaky crust.',    2, 50, 3, 8),
+  ('Classic Cheesecake',   'Creamy cheesecake on a buttery graham cracker crust.',        3, 90, 3, 8),
+  ('Tiramisu',             'Coffee-soaked ladyfingers layered with mascarpone cream.',    3, 30, 3, 6);
 
 -- Salads (category_id = 4)
-INSERT INTO Dishes (name, description, cooking_difficulty, cooking_time, category_id) VALUES
-  ('Caesar Salad',   'Romaine lettuce with Caesar dressing, croutons, and Parmesan.', 2, 15, 4),
-  ('Greek Salad',    'Tomatoes, cucumbers, olives, feta cheese with olive oil.',      1, 10, 4),
-  ('Waldorf Salad',  'Apples, celery, grapes, and walnuts in a mayo-yogurt dressing.',2, 20, 4);
+INSERT INTO Dishes (name, description, cooking_difficulty, cooking_time, category_id, number_of_servings) VALUES
+  ('Caesar Salad',   'Romaine lettuce with Caesar dressing, croutons, and Parmesan.', 1, 15, 4, 2),
+  ('Greek Salad',    'Tomatoes, cucumbers, olives, feta cheese with olive oil.',      1, 10, 4, 4),
+  ('Waldorf Salad',  'Apples, celery, grapes, and walnuts in a mayo-yogurt dressing.',1, 20, 4, 4);
 
 -- Appetizers (category_id = 5)
-INSERT INTO Dishes (name, description, cooking_difficulty, cooking_time, category_id) VALUES
-  ('Bruschetta',      'Grilled bread topped with tomato, garlic, basil, and olive oil.', 1, 15, 5),
-  ('Shrimp Cocktail', 'Chilled shrimp served with tangy cocktail sauce.',                  2, 10, 5);
+INSERT INTO Dishes (name, description, cooking_difficulty, cooking_time, category_id, number_of_servings) VALUES
+  ('Bruschetta',      'Grilled bread topped with tomato, garlic, basil, and olive oil.', 1, 15, 5, 4),
+  ('Shrimp Cocktail', 'Chilled shrimp served with tangy cocktail sauce.',                  1, 10, 5, 2);
 
   INSERT INTO DishTastes (dish_id, taste_id) VALUES
   -- 1. Spaghetti Bolognese
