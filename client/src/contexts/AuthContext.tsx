@@ -31,7 +31,6 @@ interface AuthContextType {
     currentPassword: string,
     newPassword: string
   ) => Promise<void>;
-  refreshToken: () => Promise<boolean>;
   makeAuthenticatedRequest: (
     url: string,
     options?: AxiosRequestConfig
@@ -110,7 +109,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem("accessToken");
     }
   }, [accessToken, user?.userId]); // Set up axios interceptor for automatic token handling
-  
+
   useEffect(() => {
     const setupInterceptors = () => {
       // Request interceptor to add token to headers
@@ -165,7 +164,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const interceptors = setupInterceptors();
     return interceptors.cleanup;
   }, [accessToken, logout, refreshToken]); // Check if user is authenticated on app load
-  
+
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem("accessToken");
@@ -196,7 +195,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
     initAuth();
   }, [refreshToken]);
- 
+
   // Clear sensitive data on page unload for security
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -475,7 +474,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     updateProfile,
     changePassword,
-    refreshToken,
     makeAuthenticatedRequest,
     isAuthenticated: !!user,
   };
