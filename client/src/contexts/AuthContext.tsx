@@ -60,9 +60,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState<string | null>(
     localStorage.getItem("accessToken")
-  );
-  const refreshToken = useCallback(async (): Promise<boolean> => {
+  );  const refreshToken = useCallback(async (): Promise<boolean> => {
     try {
+      // Don't attempt refresh if we don't have a refresh token cookie
+      const hasRefreshCookie = document.cookie.includes('refreshToken');
+      if (!hasRefreshCookie) {
+        console.log("No refresh token cookie found, skipping refresh");
+        return false;
+      }
+
       const response = await axios.post(
         `${API_URL}/auth/refresh-token`,
         {},
@@ -80,6 +86,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return false;
     } catch (error) {
       console.error("Token refresh error:", error);
+      // Clear any invalid tokens on refresh failure
+      setAccessToken(null);
+      localStorage.removeItem("accessToken");
       return false;
     }
   }, []);
@@ -122,18 +131,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return config;
         },
         (error) => Promise.reject(error)
-      );
-
-      // Response interceptor to handle token refresh
+      );      // Response interceptor to handle token refresh
       const responseInterceptor = axios.interceptors.response.use(
         (response) => response,
         async (error) => {
           const originalRequest = error.config;
 
+          // Don't try to refresh tokens for login/register/auth routes
+          const isAuthRoute = originalRequest?.url?.includes('/auth/login') || 
+                             originalRequest?.url?.includes('/auth/register') ||
+                             originalRequest?.url?.includes('/auth/refresh-token');
+
           if (
             error.response?.status === 401 &&
             originalRequest &&
-            !originalRequest._retry
+            !originalRequest._retry &&
+            !isAuthRoute &&
+            accessToken // Only try to refresh if we have an access token
           ) {
             originalRequest._retry = true;
 
@@ -163,8 +177,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const interceptors = setupInterceptors();
     return interceptors.cleanup;
-  }, [accessToken, logout, refreshToken]); // Check if user is authenticated on app load
-
+  }, [accessToken, logout, refreshToken]);  // Check if user is authenticated on app load
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem("accessToken");
@@ -174,10 +187,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const isValid = await verifyToken(token);
           if (!isValid) {
             console.log("Token invalid, attempting refresh...");
-            const refreshed = await refreshToken();
-            if (!refreshed) {
-              console.log("Token refresh failed, logging out...");
-              // Explicitly clear user state and token
+            // Only try to refresh if we have a refresh token cookie
+            const hasRefreshCookie = document.cookie.includes('refreshToken');
+            if (hasRefreshCookie) {
+              const refreshed = await refreshToken();
+              if (!refreshed) {
+                console.log("Token refresh failed, logging out...");
+                // Explicitly clear user state and token
+                setUser(null);
+                setAccessToken(null);
+                localStorage.removeItem("accessToken");
+              }
+            } else {
+              console.log("No refresh token available, clearing session...");
+              // No refresh token available, clear the session
               setUser(null);
               setAccessToken(null);
               localStorage.removeItem("accessToken");
@@ -292,13 +315,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       return false;
     }
-  };
-  const login = async (
+  };  const login = async (
     email: string,
     password: string,
     rememberMe: boolean = false
   ): Promise<void> => {
     setLoading(true);
+    
+    // Clear any existing tokens before attempting login
+    setUser(null);
+    setAccessToken(null);
+    localStorage.removeItem("accessToken");
+    
     try {
       const response = await axios.post(
         `${API_URL}/auth/login`,
@@ -328,6 +356,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setAccessToken(data.accessToken);
       localStorage.setItem("accessToken", data.accessToken);
     } catch (error) {
+      // Ensure tokens are cleared on login failure
+      setUser(null);
+      setAccessToken(null);
+      localStorage.removeItem("accessToken");
+      
       if (axios.isAxiosError(error) && error.response?.data?.error) {
         throw new Error(error.response.data.error);
       }
