@@ -60,10 +60,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState<string | null>(
     localStorage.getItem("accessToken")
-  );  const refreshToken = useCallback(async (): Promise<boolean> => {
+  );
+  const refreshToken = useCallback(async (): Promise<boolean> => {
     try {
       // Don't attempt refresh if we don't have a refresh token cookie
-      const hasRefreshCookie = document.cookie.includes('refreshToken');
+      const hasRefreshCookie = document.cookie.includes("refreshToken");
       if (!hasRefreshCookie) {
         console.log("No refresh token cookie found, skipping refresh");
         return false;
@@ -131,16 +132,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return config;
         },
         (error) => Promise.reject(error)
-      );      // Response interceptor to handle token refresh
+      ); // Response interceptor to handle token refresh
       const responseInterceptor = axios.interceptors.response.use(
         (response) => response,
         async (error) => {
           const originalRequest = error.config;
 
           // Don't try to refresh tokens for login/register/auth routes
-          const isAuthRoute = originalRequest?.url?.includes('/auth/login') || 
-                             originalRequest?.url?.includes('/auth/register') ||
-                             originalRequest?.url?.includes('/auth/refresh-token');
+          const isAuthRoute =
+            originalRequest?.url?.includes("/auth/login") ||
+            originalRequest?.url?.includes("/auth/register") ||
+            originalRequest?.url?.includes("/auth/refresh-token");
 
           if (
             error.response?.status === 401 &&
@@ -177,7 +179,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const interceptors = setupInterceptors();
     return interceptors.cleanup;
-  }, [accessToken, logout, refreshToken]);  // Check if user is authenticated on app load
+  }, [accessToken, logout, refreshToken]); // Check if user is authenticated on app load
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem("accessToken");
@@ -188,7 +190,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (!isValid) {
             console.log("Token invalid, attempting refresh...");
             // Only try to refresh if we have a refresh token cookie
-            const hasRefreshCookie = document.cookie.includes('refreshToken');
+            const hasRefreshCookie = document.cookie.includes("refreshToken");
             if (hasRefreshCookie) {
               const refreshed = await refreshToken();
               if (!refreshed) {
@@ -315,18 +317,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       return false;
     }
-  };  const login = async (
+  };
+  const login = async (
     email: string,
     password: string,
     rememberMe: boolean = false
   ): Promise<void> => {
     setLoading(true);
-    
+
     // Clear any existing tokens before attempting login
     setUser(null);
     setAccessToken(null);
     localStorage.removeItem("accessToken");
-    
+
     try {
       const response = await axios.post(
         `${API_URL}/auth/login`,
@@ -360,7 +363,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       setAccessToken(null);
       localStorage.removeItem("accessToken");
-      
+
       if (axios.isAxiosError(error) && error.response?.data?.error) {
         throw new Error(error.response.data.error);
       }
