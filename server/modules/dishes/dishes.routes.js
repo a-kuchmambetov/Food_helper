@@ -5,24 +5,18 @@ import { searchRateLimit } from "../../middleware/security.js";
 
 const router = express.Router();
 
-router.get("/dish/:id", authenticateToken, dishesController.getDishById);
-router.get("/dishes", authenticateToken, dishesController.getAllDishes);
+router.get("/dish/:id", dishesController.getDishById);
+router.get("/dishes", dishesController.getAllDishes);
 router.get(
   "/dishes/limited",
-  authenticateToken,
+
   dishesController.getDishesLimited
 );
 
 // Search routes with rate limiting
-router.get(
-  "/dishes/filters",
-  authenticateToken,
-  searchRateLimit,
-  dishesController.getFilters
-);
+router.get("/dishes/filters", searchRateLimit, dishesController.getFilters);
 router.post(
   "/dishes/filters",
-  authenticateToken,
   searchRateLimit,
   dishesController.getDishesByFilters
 );

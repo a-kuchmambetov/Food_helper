@@ -27,17 +27,6 @@ function AppGuard({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, location.pathname, navigate]);
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-black to-slate-900">
-  //       <div className="flex flex-col items-center space-y-4">
-  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-  //         <div className="text-white text-xl">Loading...</div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
   // Allow access to auth page and email verification only when not authenticated
   if (
     !isAuthenticated &&
@@ -186,7 +175,7 @@ function AppContent() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/verify-email" element={<EmailVerification />} />
           {/* All other routes are now protected by AppGuard */}
-          <Route path="/" element={<Catalog />} />{" "}
+          <Route path="/" element={<Auth />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/dish/:id" element={<Dish />} />
           <Route path="/profile" element={<Profile />} />

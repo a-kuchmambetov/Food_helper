@@ -9,7 +9,7 @@ dotenv.config();
  */
 export const generalRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.GENERAL_RATE_LIMIT) || 100,
+  max: parseInt(process.env.GENERAL_RATE_LIMIT),
   message: {
     error: "Too many requests from this IP, please try again later",
     retryAfter: 15 * 60, // 15 minutes in seconds
