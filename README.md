@@ -1,2 +1,3 @@
-# food_helper
-Diploma project for 122 Computer Science "Khai" by Kuchmambetov Artem
+# Food helper
+Project to solve everday life dilema - what to eat?
+
