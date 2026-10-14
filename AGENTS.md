@@ -30,4 +30,6 @@ Vitest covers the frontend session context. Node tests with PGlite cover the API
 
 ## Commit & Pull Request Guidelines
 
+For commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+
 History favors short, sentence-style summaries such as `Added server part for planner`. Use a concise imperative subject, keep each commit focused, and explain migration-sensitive changes in the body. Pull requests should describe the problem and solution, identify affected apps, link related issues, list verification commands, and include screenshots for visible UI changes. Never commit `.env` files, credentials, tokens, or production connection strings; document required variables in `.env.example`.
