@@ -1,29 +1,31 @@
 {
-  "name": "food_helper",
+  "name": "food-helper",
   "version": "1.0.0",
-  "description": "Diploma project 2025 KHAI. 146 Kuchmambetov Artem.",
-  "homepage": "https://github.com/a-kuchmambetov/Food_helper#readme",
-  "bugs": {
-    "url": "https://github.com/a-kuchmambetov/Food_helper/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/a-kuchmambetov/Food_helper.git"
-  },
-  "author": "Kuchmambetov Artem",
+  "private": true,
+  "description": "",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "type": "module",
   "scripts": {
-    "install-all": "npm i && npm --prefix client install && npm --prefix server install",
-    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
-    "dev:client": "npm --prefix client run dev",
-    "dev:server": "npm --prefix server run dev",
-    "build": "npm run build:client",
-    "build:client": "npm --prefix client run build",
-    "start": "npm run install-all && npm run build && concurrently \" npm --prefix server start\" \"npm --prefix client start\""
+    "dev": "pnpm --parallel --filter @repo/api --filter @repo/web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "oxlint --deny-warnings apps packages",
+    "test": "pnpm -r test:run",
+    "db:migrate": "pnpm --filter @repo/api db:migrate",
+    "db:generate": "pnpm --filter @repo/api db:generate",
+    "better-auth:schema": "pnpm --filter @repo/api exec auth generate --config ./src/plugins/auth/auth.ts --output ./src/db/schema/auth.ts",
+    "lint:fix": "oxlint --fix --deny-warnings apps packages",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check ."
   },
   "devDependencies": {
-    "concurrently": "^8.2.0"
+    "oxfmt": "0.66.0",
+    "oxlint": "1.81.0"
   },
-  "dependencies": {
-    "node-fetch": "^3.3.2"
-  }
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "packageManager": "pnpm@11.24.0"
 }

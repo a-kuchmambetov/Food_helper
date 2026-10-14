@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 80,
+  "tabWidth": 2,
+  "sortImports": {
+    "customGroups": [
+      {
+        "groupName": "react",
+        "elementNamePattern": ["react"]
+      },
+      {
+        "groupName": "react-dom",
+        "elementNamePattern": ["react-dom"]
+      }
+    ],
+    "groups": [
+      "react",
+      "react-dom",
+      ["builtin", "external"],
+      "internal",
+      ["parent", "sibling", "index"],
+      "unknown"
+    ],
+    "newlinesBetween": false
+  },
+  "sortTailwindcss": {
+    "functions": ["sortCx", "cx"],
+    "stylesheet": "./apps/web/src/styles/globals.css"
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/next-env.d.ts",
+    "apps/api/migrations/**",
+    "pnpm-lock.yaml"
+  ]
+}
