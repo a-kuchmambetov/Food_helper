@@ -9,6 +9,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --parallel --filter @repo/api --filter @repo/web dev",
+    "dev:db": "docker compose up -d",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "oxlint --deny-warnings apps packages",
