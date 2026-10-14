@@ -134,10 +134,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await api.post("/auth/sign-out", {});
     setUser(null);
   }, []);
-  const verifyEmail = useCallback(async (token: string) => {
-    await api.get("/auth/verify-email", { params: { token } });
-    return { message: "Email verified successfully" };
-  }, []);
+  const verifyEmail = useCallback(
+    async (token: string) => {
+      // Better Auth signs the user in after verification; load that session.
+      await api.get("/auth/verify-email", { params: { token } });
+      await refreshSession();
+      return { message: "Email verified successfully" };
+    },
+    [refreshSession],
+  );
   const resendVerificationEmail = useCallback(async (email: string) => {
     await api.post("/auth/send-verification-email", { email });
     return { message: "If verification is needed, a new email has been sent." };

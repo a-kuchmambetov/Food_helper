@@ -1,9 +1,11 @@
 import { env } from "@config/env.js";
 import { db } from "@db/index.js";
+import { mailer } from "@plugins/mailer/index.js";
 import { createAuth } from "./config.js";
 
 export const auth = createAuth(db, {
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_BASE_URL,
   webOrigin: env.WEB_ORIGIN,
+  mailer,
 });

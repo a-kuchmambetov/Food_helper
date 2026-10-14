@@ -8,23 +8,37 @@ try {
   if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
 }
 
-const envSchema = z.object({
-  // Api
-  NODE_ENV: z
-    .enum(["development", "staging", "production"])
-    .default("development"),
-  API_PORT: z.coerce.number().int().min(1).max(65535).default(5000),
-  API_HOST: z.string().default("0.0.0.0"),
-  WEB_ORIGIN: z.url().default("http://localhost:3000"),
-  BETTER_AUTH_SECRET: z.string().min(32),
-  BETTER_AUTH_BASE_URL: z.url().default("http://localhost:3000/api/auth"),
-  // Database
-  POSTGRES_USER: z.string().min(1),
-  POSTGRES_PASSWORD: z.string().min(1),
-  POSTGRES_DB: z.string().min(1),
-  POSTGRES_HOST: z.string().default("localhost"),
-  POSTGRES_PORT: z.coerce.number().int().min(1).max(65535).default(5432),
-});
+const envSchema = z
+  .object({
+    // Api
+    NODE_ENV: z
+      .enum(["development", "staging", "production"])
+      .default("development"),
+    API_PORT: z.coerce.number().int().min(1).max(65535).default(5000),
+    API_HOST: z.string().default("0.0.0.0"),
+    WEB_ORIGIN: z.url().default("http://localhost:3000"),
+    BETTER_AUTH_SECRET: z.string().min(32),
+    BETTER_AUTH_BASE_URL: z.url().default("http://localhost:3000/api/auth"),
+    // Database
+    POSTGRES_USER: z.string().min(1),
+    POSTGRES_PASSWORD: z.string().min(1),
+    POSTGRES_DB: z.string().min(1),
+    POSTGRES_HOST: z.string().default("localhost"),
+    POSTGRES_PORT: z.coerce.number().int().min(1).max(65535).default(5432),
+    // Email
+    RESEND_API_KEY: z
+      .string()
+      .optional()
+      .transform((value) => value || undefined),
+    EMAIL_FROM: z
+      .string()
+      .min(1)
+      .default("Food Helper <onboarding@resend.dev>"),
+  })
+  .refine((data) => data.NODE_ENV === "development" || data.RESEND_API_KEY, {
+    message: "RESEND_API_KEY is required outside development",
+    path: ["RESEND_API_KEY"],
+  });
 
 export const env = envSchema.parse(process.env);
 

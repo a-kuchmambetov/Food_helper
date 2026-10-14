@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/base/buttons/button";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
@@ -107,16 +108,15 @@ function Auth() {
         setForm({ name: "", email: "", password: "" });
       }
     } catch (err: unknown) {
+      // Unverified sign-in: Better Auth has already sent a new verification email
+      if (
+        axios.isAxiosError(err) &&
+        err.response?.data?.code === "EMAIL_NOT_VERIFIED"
+      ) {
+        router.push(`/verify-email?email=${encodeURIComponent(form.email)}`);
+        return;
+      }
       if (err instanceof Error) {
-        // Check if it's an email verification error during login
-        if (
-          err.message.includes("verify") ||
-          err.message.includes("verification")
-        ) {
-          // Redirect to verification page with email info
-          router.push(`/verify-email?email=${encodeURIComponent(form.email)}`);
-          return;
-        }
         setError(err.message || "Something went wrong");
       } else {
         setError("Something went wrong");

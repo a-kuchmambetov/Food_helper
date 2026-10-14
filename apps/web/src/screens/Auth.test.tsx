@@ -92,3 +92,27 @@ it("announces a rejected sign-in and allows retrying", async () => {
   );
   expect(submit).toBeEnabled();
 });
+
+it("sends an unverified user to the email verification page", async () => {
+  const user = userEvent.setup();
+  auth.login.mockRejectedValueOnce(
+    Object.assign(new Error("Email not verified"), {
+      isAxiosError: true,
+      response: { status: 403, data: { code: "EMAIL_NOT_VERIFIED" } },
+    }),
+  );
+  render(<Auth />);
+  await user.type(screen.getByLabelText(/^Email/), "test@example.com");
+  await user.type(screen.getByLabelText(/^Password/), "Password123!");
+  await user.click(
+    within(screen.getByRole("form", { name: "Sign in" })).getByRole("button", {
+      name: "Sign In",
+    }),
+  );
+  await waitFor(() =>
+    expect(router.push).toHaveBeenCalledWith(
+      "/verify-email?email=test%40example.com",
+    ),
+  );
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});

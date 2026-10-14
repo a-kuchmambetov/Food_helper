@@ -64,7 +64,7 @@ describe("Better Auth session integration", () => {
     expect(api.post).toHaveBeenCalledWith("/auth/sign-out", {});
     expect(result.current.isAuthenticated).toBe(false);
   });
-  it("registers and verifies email without logging in prematurely", async () => {
+  it("registers and resends verification without logging in prematurely", async () => {
     const { result } = renderHook(useAuth, { wrapper: AuthProvider });
     await waitFor(() => expect(result.current.loading).toBe(false));
     await act(async () => {
@@ -77,16 +77,24 @@ describe("Better Auth session integration", () => {
           })
         ).requiresEmailVerification,
       ).toBe(true);
-      await result.current.verifyEmail("verification-token");
       await result.current.resendVerificationEmail(user.email);
-    });
-    expect(api.get).toHaveBeenCalledWith("/auth/verify-email", {
-      params: { token: "verification-token" },
     });
     expect(api.post).toHaveBeenCalledWith("/auth/send-verification-email", {
       email: user.email,
     });
     expect(result.current.isAuthenticated).toBe(false);
+  });
+  it("signs the user in after verifying their email", async () => {
+    const { result } = renderHook(useAuth, { wrapper: AuthProvider });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    api.get.mockResolvedValueOnce({ data: { status: true, user: null } });
+    api.get.mockResolvedValueOnce({ data: { user } });
+    await act(() => result.current.verifyEmail("verification-token"));
+    expect(api.get).toHaveBeenCalledWith("/auth/verify-email", {
+      params: { token: "verification-token" },
+    });
+    expect(api.get).toHaveBeenLastCalledWith("/auth/get-session");
+    expect(result.current.isAuthenticated).toBe(true);
   });
   it("clears an expired session after a protected request is rejected", async () => {
     api.get.mockResolvedValue({ data: { user } });

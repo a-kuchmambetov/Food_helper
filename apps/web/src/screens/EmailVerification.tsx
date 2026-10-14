@@ -24,12 +24,13 @@ function EmailVerification() {
       setEmail(emailFromParams);
     }
   }, [searchParams]);
-  // Redirect if already authenticated
+  // Redirect if already authenticated, unless a verification link is being
+  // processed (verification signs the user in and shows its own success state)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !searchParams.get("token")) {
       router.push("/catalog");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, searchParams]);
   // Reset verification state when URL changes to a different token
   useEffect(() => {
     const token = searchParams.get("token");
@@ -64,9 +65,9 @@ function EmailVerification() {
       const performVerification = async () => {
         try {
           const result = await verifyEmail(token);
-          setSuccess(result.message + ". You can now login with your account.");
+          setSuccess(result.message + ". You're now signed in.");
           // Redirect after showing success message
-          setTimeout(() => router.push("/auth"), 3000);
+          setTimeout(() => router.push("/catalog"), 3000);
         } catch (err: unknown) {
           if (err instanceof Error) {
             setError(err.message);
@@ -158,7 +159,7 @@ function EmailVerification() {
                 </p>
               </div>
               <p className="text-sm text-gray-400">
-                Redirecting to login in 3 seconds...
+                Redirecting to Food Helper in 3 seconds...
               </p>
             </div>
           )}{" "}
