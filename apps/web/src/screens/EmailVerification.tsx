@@ -10,12 +10,16 @@ function EmailVerification() {
   const { verifyEmail, resendVerificationEmail, isAuthenticated } = useAuth();
   const verificationAttempted = useRef(false);
   const currentToken = useRef<string | null>(null);
+  const redirectTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [email, setEmail] = useState("");
   const [showResendForm, setShowResendForm] = useState(false);
+
+  // Cancel a pending post-verification redirect if the user leaves first
+  useEffect(() => () => clearTimeout(redirectTimer.current), []);
 
   // Get email from URL params if available
   useEffect(() => {
@@ -67,7 +71,10 @@ function EmailVerification() {
           const result = await verifyEmail(token);
           setSuccess(result.message + ". You're now signed in.");
           // Redirect after showing success message
-          setTimeout(() => router.push("/catalog"), 3000);
+          redirectTimer.current = setTimeout(
+            () => router.push("/catalog"),
+            3000,
+          );
         } catch (err: unknown) {
           if (err instanceof Error) {
             setError(err.message);

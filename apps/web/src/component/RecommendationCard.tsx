@@ -1,24 +1,22 @@
+import Link from "next/link";
 import type { RecommendedDish } from "../types/DbTypes";
 import Badge from "./CatalogTable/Badge";
 
 interface RecommendationCardProps {
   dish: RecommendedDish;
   onAddToPlan: (dish: RecommendedDish) => void;
-  onDishClick: (dishId: number) => void;
 }
 
-function RecommendationCard({
-  dish,
-  onAddToPlan,
-  onDishClick,
-}: RecommendationCardProps) {
+function RecommendationCard({ dish, onAddToPlan }: RecommendationCardProps) {
   return (
     <div className="rounded-lg border border-zinc-600 bg-zinc-800 p-3 transition-colors hover:bg-zinc-700/50">
-      <h4
-        className="mb-2 cursor-pointer font-medium text-white transition-colors hover:text-blue-400"
-        onClick={() => onDishClick(dish.id)}
-      >
-        {dish.name}
+      <h4 className="mb-2 font-medium">
+        <Link
+          href={`/dish/${dish.id}`}
+          className="text-white transition-colors hover:text-blue-400"
+        >
+          {dish.name}
+        </Link>
       </h4>
 
       {dish.description && (

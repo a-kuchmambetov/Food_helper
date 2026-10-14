@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { RouteProvider } from "@/providers/router-provider";
@@ -13,7 +12,7 @@ const inter = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Food Helper",
+  title: { default: "Food Helper", template: "%s | Food Helper" },
   description: "Plan your meals and manage your ingredients.",
 };
 export default function RootLayout({
@@ -26,9 +25,7 @@ export default function RootLayout({
       <body className="bg-primary text-primary">
         <RouteProvider>
           <Theme>
-            <Suspense fallback={<p>Loading…</p>}>
-              <AppShell>{children}</AppShell>
-            </Suspense>
+            <AppShell>{children}</AppShell>
           </Theme>
         </RouteProvider>
       </body>

@@ -1,22 +1,24 @@
+import Link from "next/link";
 import type { PlannedDish } from "../types/DbTypes";
 import Badge from "./CatalogTable/Badge";
 
 interface MealCardProps {
   dish: PlannedDish;
   onRemove: (dishId: number, mealTypeId: number) => void;
-  onDishClick: (dishId: number) => void;
 }
 
-function MealCard({ dish, onRemove, onDishClick }: MealCardProps) {
+function MealCard({ dish, onRemove }: MealCardProps) {
   return (
     <div className="rounded-lg border border-zinc-600 bg-zinc-800 p-4 transition-colors hover:bg-zinc-700/50">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h4
-            className="mb-2 cursor-pointer font-medium text-white transition-colors hover:text-blue-400"
-            onClick={() => onDishClick(dish.dish_id)}
-          >
-            {dish.name}
+          <h4 className="mb-2 font-medium">
+            <Link
+              href={`/dish/${dish.dish_id}`}
+              className="text-white transition-colors hover:text-blue-400"
+            >
+              {dish.name}
+            </Link>
           </h4>
 
           <div className="mb-3 flex flex-wrap gap-2">

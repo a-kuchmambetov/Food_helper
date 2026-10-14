@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Button from "../component/Button";
 import MealCard from "../component/MealCard";
 import RecommendationCard from "../component/RecommendationCard";
@@ -13,13 +12,16 @@ import type {
   RecommendedDish,
 } from "../types/DbTypes";
 
+// `YYYY-MM-DD` in the user's local timezone (toISOString would use UTC).
+const toDateInputValue = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
 function Planner() {
-  const { isAuthenticated, makeAuthenticatedRequest } = useAuth();
-  const router = useRouter();
+  const { makeAuthenticatedRequest } = useAuth();
 
   // State management
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0],
+  const [selectedDate, setSelectedDate] = useState<string>(() =>
+    toDateInputValue(new Date()),
   );
   const [dayPlan, setDayPlan] = useState<DayPlan | null>(null);
   const [mealTypes, setMealTypes] = useState<MealType[]>([]);
@@ -143,8 +145,6 @@ function Planner() {
 
       // Refresh the plan
       await fetchPlannedDishes(selectedDate);
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err: unknown) {
       console.error("Failed to add dish to plan:", err);
       if (
@@ -194,8 +194,6 @@ function Planner() {
 
       // Refresh the plan
       await fetchPlannedDishes(selectedDate);
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Failed to remove dish from plan:", err);
       setError("Failed to remove dish from meal plan");
@@ -208,41 +206,28 @@ function Planner() {
     setShowAddModal(true);
   };
 
-  // Navigate to dish detail
-  const goToDish = (dishId: number) => {
-    router.push(`/dish/${dishId}`);
-  };
-  // Initial data loading
+  // Meal types don't depend on the date, so load them once
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/auth");
-      return;
+    fetchMealTypes();
+  }, [fetchMealTypes]);
+
+  // Load the plan for the selected date
+  useEffect(() => {
+    fetchPlannedDishes(selectedDate).finally(() => setLoading(false));
+  }, [fetchPlannedDishes, selectedDate]);
+
+  // Keep visible recommendations in sync with the remaining calorie budget
+  useEffect(() => {
+    if (showRecommendations) fetchRecommendedDishes();
+  }, [showRecommendations, fetchRecommendedDishes]);
+
+  // Auto-clear success messages
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(null), 3000);
+      return () => clearTimeout(timer);
     }
-
-    const loadInitialData = async () => {
-      setLoading(true);
-      await Promise.all([fetchMealTypes(), fetchPlannedDishes(selectedDate)]);
-      setLoading(false);
-    };
-
-    loadInitialData();
-  }, [
-    isAuthenticated,
-    router,
-    selectedDate,
-    fetchMealTypes,
-    fetchPlannedDishes,
-  ]);
-
-  // Handle date change
-  const handleDateChange = (newDate: string) => {
-    setSelectedDate(newDate);
-    fetchPlannedDishes(newDate);
-  };
-
-  useEffect(() => {
-    fetchRecommendedDishes();
-  }, [dayPlan?.totalCalories, fetchRecommendedDishes]);
+  }, [success]);
 
   // Auto-clear error messages
   useEffect(() => {
@@ -283,7 +268,7 @@ function Planner() {
               id="date-selector"
               type="date"
               value={selectedDate}
-              onChange={(e) => handleDateChange(e.target.value)}
+              onChange={(e) => setSelectedDate(e.target.value)}
               className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
               title="Select date for meal planning"
             />
@@ -310,7 +295,8 @@ function Planner() {
               <div className="border-b border-zinc-700 px-6 py-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">
-                    Meal Plan for {new Date(selectedDate).toLocaleDateString()}
+                    Meal Plan for{" "}
+                    {new Date(`${selectedDate}T00:00`).toLocaleDateString()}
                   </h2>
                   <div className="text-sm text-gray-400">
                     Total:{" "}
@@ -405,7 +391,6 @@ function Planner() {
                                         selectedDate,
                                       )
                                     }
-                                    onDishClick={goToDish}
                                   />
                                 ))}
                               </div>
@@ -466,8 +451,8 @@ function Planner() {
                       : "Get Recommendations"
                   }
                   onClick={() => {
-                    setShowRecommendations(true);
-                    fetchRecommendedDishes();
+                    if (showRecommendations) fetchRecommendedDishes();
+                    else setShowRecommendations(true);
                   }}
                 />
 
@@ -486,7 +471,6 @@ function Planner() {
                             key={dish.id}
                             dish={dish}
                             onAddToPlan={openAddModal}
-                            onDishClick={goToDish}
                           />
                         ))}
                       </div>
@@ -500,7 +484,7 @@ function Planner() {
 
         {/* Add Dish Modal */}
         {showAddModal && selectedDish && (
-          <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="w-full max-w-md rounded-lg border border-zinc-700 bg-zinc-900 p-6">
               <h3 className="mb-4 text-xl font-semibold">
                 Add "{selectedDish.name}" to Plan

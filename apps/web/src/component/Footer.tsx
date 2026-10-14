@@ -10,7 +10,7 @@ const footerNavList = [
 
 export const Footer = () => {
   return (
-    <footer className="bg-brand-section py-12">
+    <footer className="border-t border-secondary bg-brand-section py-12">
       <div className="mx-auto max-w-container px-4 md:px-8">
         <div className="flex flex-col justify-between lg:flex-row lg:items-center">
           <div className="lg:w-40">

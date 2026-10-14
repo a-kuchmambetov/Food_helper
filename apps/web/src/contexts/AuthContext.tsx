@@ -1,9 +1,16 @@
 "use client";
 
-import { createContext, useCallback, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
 import axios from "axios";
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
+import { api } from "@/lib/api";
 
 export interface User {
   userId: string;
@@ -51,21 +58,6 @@ interface AuthContextType {
 }
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined,
-);
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "/api",
-  withCredentials: true,
-});
-api.interceptors.response.use(
-  (response) => response,
-  (error: unknown) => {
-    if (axios.isAxiosError(error))
-      error.message =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        error.message;
-    return Promise.reject(error);
-  },
 );
 const toUser = (user: SessionUser): User => ({
   userId: user.id,
@@ -164,23 +156,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [],
   );
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        isAuthenticated: !!user,
-        login,
-        register,
-        logout,
-        verifyEmail,
-        resendVerificationEmail,
-        updateProfile,
-        changePassword,
-        makeAuthenticatedRequest,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  // Keep the context value stable so consumers only re-render when auth state changes.
+  const value = useMemo<AuthContextType>(
+    () => ({
+      user,
+      loading,
+      isAuthenticated: !!user,
+      login,
+      register,
+      logout,
+      verifyEmail,
+      resendVerificationEmail,
+      updateProfile,
+      changePassword,
+      makeAuthenticatedRequest,
+    }),
+    [
+      user,
+      loading,
+      login,
+      register,
+      logout,
+      verifyEmail,
+      resendVerificationEmail,
+      updateProfile,
+      changePassword,
+      makeAuthenticatedRequest,
+    ],
   );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -1,28 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { api } from "@/lib/api";
 import CatalogTable from "../component/CatalogTable";
 import Pagination from "../component/CatalogTable/Pagination";
 import type { CatalogData, FilteredCatalogData } from "../types/DbTypes";
 import type { Filters } from "../types/Filters";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
-
+// Selecting every taste is the same as no taste filter. Returns a copy so React state is not mutated.
 function ValidateUserFilters(
   srcFilters: Filters,
   userFilters: Filters,
 ): Filters {
   if (srcFilters?.tastes?.length === userFilters?.tastes?.length)
-    userFilters.tastes = [];
+    return { ...userFilters, tastes: [] };
   return userFilters;
 }
 
 async function GetFiltersFromDB(): Promise<Filters> {
-  return axios({
-    method: "get",
-    url: API_URL + "/dishes/filters",
-  })
+  return api
+    .get("/dishes/filters")
     .then((response) => {
       if (response.status === 200) return response.data;
       throw new Error("Failed to fetch data from the server");
@@ -39,18 +36,10 @@ async function GetCatalogDataByFilters(
   elements = 6 as number,
   includeCount = true as boolean,
 ): Promise<FilteredCatalogData> {
-  return axios({
-    method: "post",
-    url: API_URL + "/dishes/filters",
-    data: {
-      ...userFilters,
-    },
-    params: {
-      page: page,
-      elements: elements,
-      includeCount: includeCount,
-    },
-  })
+  return api
+    .post("/dishes/filters", userFilters, {
+      params: { page, elements, includeCount },
+    })
     .then((response) => {
       if (response.status === 200)
         return {
@@ -80,6 +69,12 @@ function Catalog() {
     return saved ? JSON.parse(saved) : 1;
   });
 
+  // Read through a ref so loading filter options does not trigger another catalog fetch.
+  const filtersRef = useRef(filters);
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
   useEffect(() => {
     GetFiltersFromDB().then(setFilters);
   }, []);
@@ -101,7 +96,7 @@ function Catalog() {
       includeCount: boolean = true,
     ) => {
       const result = await GetCatalogDataByFilters(
-        ValidateUserFilters(filters, userFilters),
+        ValidateUserFilters(filtersRef.current, userFilters),
         page,
         elements,
         includeCount,
@@ -109,15 +104,11 @@ function Catalog() {
       setCatalogData(result.data);
       const newTotalPages = Math.ceil(result.totalCount / elements);
       if (includeCount) setTotalPages(newTotalPages);
-      if (currentPage > newTotalPages) setCurrentPage(1); // Reset to page 1 if current page exceeds total pages
-      console.log(
-        "Catalog data updated. UserFilters:",
-        userFilters,
-        "; Recived data:",
-        result.data,
-      );
+      // Reset to page 1 if current page exceeds total pages
+      if (includeCount)
+        setCurrentPage((page) => (page > newTotalPages ? 1 : page));
     },
-    [filters, currentPage],
+    [],
   );
 
   useEffect(() => {

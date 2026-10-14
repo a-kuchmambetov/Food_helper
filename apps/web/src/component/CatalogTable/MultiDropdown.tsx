@@ -24,8 +24,9 @@ function MultiDropdown({
   const [open, setOpen] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click; only listen while it is open
   useEffect(() => {
+    if (!open) return;
     function handleClickOutside(event: MouseEvent) {
       if (
         dropdownRef.current &&
@@ -36,7 +37,7 @@ function MultiDropdown({
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [open]);
 
   const handleSelect = (label: string | number) => {
     let newSelected: (string | number)[];

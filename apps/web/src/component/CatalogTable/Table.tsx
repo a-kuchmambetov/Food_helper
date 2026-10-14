@@ -11,7 +11,6 @@ interface TableProps {
 const maxNumOfEmptyRows = 6;
 
 function Table({ data }: TableProps) {
-  // Inside your component:
   const router = useRouter();
 
   function goToDishPage(dishId: number) {
@@ -53,7 +52,7 @@ function Table({ data }: TableProps) {
           </tr>
         )}
 
-        {(data.length < 6 || data === null) &&
+        {data.length < maxNumOfEmptyRows &&
           Array.from({
             length:
               (data.length === 0 ? maxNumOfEmptyRows - 1 : maxNumOfEmptyRows) -
