@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Button as UntitledButton,
   type ButtonProps as UntitledButtonProps,

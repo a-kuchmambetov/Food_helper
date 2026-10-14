@@ -1,5 +1,3 @@
-"use client";
-
 import { SearchMd } from "@untitledui/icons";
 import { Input } from "@/components/base/input/input";
 

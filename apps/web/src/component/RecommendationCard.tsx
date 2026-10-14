@@ -1,5 +1,3 @@
-"use client";
-
 import type { RecommendedDish } from "../types/DbTypes";
 import Badge from "./CatalogTable/Badge";
 

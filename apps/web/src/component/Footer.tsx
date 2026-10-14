@@ -1,43 +1,43 @@
-"use client";
+import { HeartHand } from "@untitledui/icons";
+import { Button } from "@/components/base/buttons/button";
 
-import Image from "next/image";
+const footerNavList = [
+  { label: "Catalog", href: "/catalog" },
+  { label: "Planner", href: "/planner" },
+  { label: "Inventory", href: "/inventory" },
+  { label: "Help", href: "/help" },
+];
 
-function Footer() {
+export const Footer = () => {
   return (
-    <footer className="mt-auto flex w-full items-center justify-center">
-      <div className="container flex flex-row items-center justify-between border-t-0 border-zinc-900 py-12">
-        <div className="flex flex-row items-center space-x-4">
-          <a
-            href="https://www.linkedin.com/in/artem-kuchmambetov-b60ab220a/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              src="/icons/linkedIn.svg"
-              alt="LinkedIn icon"
-              width={24}
-              height={24}
-            />
-          </a>
-          <a
-            href="https://github.com/a-kuchmambetov/Food_helper/tree/main"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              src="/icons/github.svg"
-              alt="GitHub icon"
-              width={24}
-              height={24}
-            />
-          </a>
-        </div>
-        <div className="text-sm text-white text-zinc-400">
-          © 2025 Food Helper. All rights reserved.
+    <footer className="bg-brand-section py-12">
+      <div className="mx-auto max-w-container px-4 md:px-8">
+        <div className="flex flex-col justify-between lg:flex-row lg:items-center">
+          <div className="lg:w-40">
+            <HeartHand className="size-5" aria-hidden="true" />
+          </div>
+          <ul className="mt-8 grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-[repeat(6,max-content)] lg:mt-0">
+            {footerNavList.map((item) => (
+              <li key={item.label} className="flex">
+                <Button
+                  className="max-h-5 text-footer-button-fg hover:text-footer-button-fg_hover"
+                  color="link-color"
+                  size="md"
+                  href={item.href}
+                >
+                  {item.label}
+                </Button>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-12 text-sm text-quaternary_on-brand lg:mt-0 lg:w-40 lg:text-right">
+            © {new Date().getFullYear()} Artem Kuchmambetov.
+            <span className="ml-1 md:hidden">All rights reserved.</span>
+          </p>
         </div>
       </div>
     </footer>
   );
-}
+};
 
 export default Footer;
