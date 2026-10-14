@@ -120,7 +120,7 @@ function Content({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-black to-slate-900 text-white">
       {isAuthenticated && <Navigation />}
       <main className="flex-1">{children}</main>
-      <Footer />
+      {pathname !== "/auth" ? <Footer /> : null}
     </div>
   );
 }
