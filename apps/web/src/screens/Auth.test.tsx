@@ -26,7 +26,7 @@ it("submits credentials and the remember-me choice through the accessible form",
   await user.type(screen.getByLabelText(/^Email/), "test@example.com");
   await user.type(screen.getByLabelText(/^Password/), "Password123!");
   await user.click(
-    screen.getByRole("checkbox", { name: "Keep me signed in for 30 days" }),
+    screen.getByRole("checkbox", { name: "Remember for 30 days" }),
   );
   await user.click(
     within(screen.getByRole("form", { name: "Sign in" })).getByRole("button", {
@@ -45,7 +45,7 @@ it("submits credentials and the remember-me choice through the accessible form",
 it("blocks weak passwords and completes registration with an email verification link", async () => {
   const user = userEvent.setup();
   render(<Auth />);
-  await user.click(screen.getByRole("button", { name: "Sign Up" }));
+  await user.click(screen.getByRole("button", { name: "Sign up" }));
   await user.type(screen.getByLabelText(/^Name/), "Test User");
   await user.type(screen.getByLabelText(/^Email/), "test@example.com");
   const password = screen.getByLabelText(/^Password/);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HeartHand } from "@untitledui/icons";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/base/buttons/button";
@@ -137,89 +138,75 @@ function Auth() {
     setPasswordErrors([]);
   };
 
+  const switchMode = (login: boolean) => {
+    setIsLogin(login);
+    setError("");
+    setSuccess("");
+    setPasswordErrors(login ? [] : validatePassword(form.password));
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-black to-slate-900 px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="mb-2 text-display-sm font-bold text-primary">
-            Food Helper
-          </h1>
-          <p className="text-sm text-tertiary">
-            {showVerificationPrompt
-              ? "Account created successfully!"
-              : isLogin
-                ? "Welcome back! Sign in to your account"
-                : "Create your account to get started"}
-          </p>
+    <section className="min-h-screen bg-primary px-4 py-12 sm:bg-secondary md:px-8 md:pt-24">
+      <div className="flex w-full flex-col gap-6 bg-primary sm:mx-auto sm:max-w-110 sm:rounded-2xl sm:px-10 sm:py-8 sm:shadow-sm">
+        <div className="flex flex-col items-center gap-6 text-center">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-brand-solid text-white shadow-xs">
+            <HeartHand className="size-5" aria-hidden="true" />
+          </div>
+          <div className="flex flex-col gap-2 md:gap-3">
+            <h1 className="text-xl font-semibold text-primary md:text-display-xs">
+              {showVerificationPrompt
+                ? "Account Created Successfully!"
+                : isLogin
+                  ? "Welcome back"
+                  : "Create an account"}
+            </h1>
+            <p className="text-md text-tertiary">
+              {showVerificationPrompt
+                ? "Check your inbox to finish signing up."
+                : isLogin
+                  ? "Please enter your details."
+                  : "Start planning your meals with Food Helper."}
+            </p>
+          </div>
         </div>
-        <div className="rounded-2xl border border-secondary bg-primary p-8 shadow-xl">
-          {showVerificationPrompt ? (
-            <div className="space-y-5 text-center">
-              <h2 className="text-xl font-semibold text-primary">
-                Account Created Successfully!
-              </h2>
-              <p className="text-secondary" role="status">
+
+        {showVerificationPrompt ? (
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-3 text-center">
+              <p className="text-md text-secondary" role="status">
                 {success}
               </p>
               <p className="text-sm text-tertiary">
                 We've sent a verification email to{" "}
-                <strong>{registeredEmail}</strong>. Please check your inbox and
-                click the verification link to activate your account.
+                <strong className="font-semibold text-secondary">
+                  {registeredEmail}
+                </strong>
+                . Please check your inbox and click the verification link to
+                activate your account.
               </p>
-              <Button className="w-full" onClick={handleGoToVerification}>
+            </div>
+            <div className="flex flex-col gap-4">
+              <Button size="lg" onClick={handleGoToVerification}>
                 Go to Email Verification
               </Button>
-              <Button
-                className="w-full"
-                color="tertiary"
-                onClick={handleBackToAuth}
-              >
+              <Button size="lg" color="secondary" onClick={handleBackToAuth}>
                 Back to Sign In
               </Button>
             </div>
-          ) : (
-            <>
-              <div
-                className="mb-6 flex gap-2"
-                role="group"
-                aria-label="Account access"
-              >
-                <Button
-                  className="flex-1"
-                  color={isLogin ? "secondary" : "tertiary"}
-                  aria-pressed={isLogin}
-                  onClick={() => {
-                    setIsLogin(true);
-                    setError("");
-                    setSuccess("");
-                    setPasswordErrors([]);
-                  }}
-                >
-                  Sign In
-                </Button>
-                <Button
-                  className="flex-1"
-                  color={!isLogin ? "secondary" : "tertiary"}
-                  aria-pressed={!isLogin}
-                  onClick={() => {
-                    setIsLogin(false);
-                    setError("");
-                    setSuccess("");
-                    setPasswordErrors(validatePassword(form.password));
-                  }}
-                >
-                  Sign Up
-                </Button>
-              </div>
-              <form
-                className="space-y-5"
-                onSubmit={handleSubmit}
-                aria-label={isLogin ? "Sign in" : "Sign up"}
-              >
+          </div>
+        ) : (
+          <>
+            <form
+              className="flex flex-col gap-6"
+              onSubmit={handleSubmit}
+              aria-label={isLogin ? "Sign in" : "Sign up"}
+            >
+              <div className="flex flex-col gap-5">
                 {!isLogin && (
                   <Input
                     label="Name"
                     name="name"
+                    size="lg"
                     autoComplete="name"
                     value={form.name}
                     onChange={(value) => handleChange("name", value)}
@@ -231,6 +218,7 @@ function Auth() {
                   label="Email"
                   name="email"
                   type="email"
+                  size="lg"
                   autoComplete="email"
                   value={form.email}
                   onChange={(value) => handleChange("email", value)}
@@ -241,10 +229,12 @@ function Auth() {
                   label="Password"
                   name="password"
                   type="password"
+                  size="lg"
                   autoComplete={isLogin ? "current-password" : "new-password"}
                   value={form.password}
                   onChange={(value) => handleChange("password", value)}
-                  placeholder="Enter your password"
+                  placeholder="••••••••••••"
+                  inputClassName="placeholder:text-placeholder/50"
                   isRequired
                   isInvalid={
                     !isLogin &&
@@ -260,43 +250,62 @@ function Auth() {
                     )
                   }
                 />
-                {isLogin && (
+              </div>
+
+              {isLogin && (
+                <div className="flex items-center">
                   <Checkbox
                     name="remember-me"
                     isSelected={rememberMe}
                     onChange={setRememberMe}
-                    label="Keep me signed in for 30 days"
+                    label="Remember for 30 days"
                   />
-                )}
-                {error && (
-                  <p
-                    role="alert"
-                    className="rounded-lg bg-error-primary p-3 text-sm text-error-primary"
-                  >
-                    {error}
-                  </p>
-                )}
-                <Button
-                  type="submit"
-                  className="w-full"
-                  size="lg"
-                  isLoading={loading}
-                  isDisabled={loading}
+                </div>
+              )}
+
+              {error && (
+                <p
+                  role="alert"
+                  className="rounded-lg bg-error-primary p-3 text-sm text-error-primary"
                 >
-                  {loading
-                    ? isLogin
-                      ? "Signing In..."
-                      : "Creating Account..."
-                    : isLogin
-                      ? "Sign In"
-                      : "Sign Up"}
-                </Button>
-              </form>
-            </>
-          )}
-        </div>
+                  {error}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                size="lg"
+                isLoading={loading}
+                isDisabled={loading}
+              >
+                {loading
+                  ? isLogin
+                    ? "Signing In..."
+                    : "Creating Account..."
+                  : isLogin
+                    ? "Sign In"
+                    : "Sign Up"}
+              </Button>
+            </form>
+
+            <div className="flex justify-center gap-1 text-center">
+              <span className="text-sm text-tertiary">
+                {isLogin
+                  ? "Don't have an account?"
+                  : "Already have an account?"}
+              </span>
+              <Button
+                color="link-color"
+                size="md"
+                onClick={() => switchMode(!isLogin)}
+              >
+                {isLogin ? "Sign up" : "Log in"}
+              </Button>
+            </div>
+          </>
+        )}
       </div>
-    </div>
+    </section>
   );
 }
 
