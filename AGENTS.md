@@ -1,5 +1,10 @@
 # Repository Guidelines
 
+## Resources
+
+Untitled UI (UUI) React library (MCP) - https://www.untitledui.com/react/components
+Figma - https://www.figma.com/design/wSnAXB8gU01dizjKQOvtwj/Food-Helper (Always use UUI components, if there no components create a variant/alter/combination from UUI components and save them as New Component)
+
 ## Project Structure & Module Organization
 
 Use [Repo 1](https://github.com/fastify/demo/tree/main) and [Repo 2](https://github.com/revell29/fastify-clean-architecture) as an example of good structure for Fastify API.

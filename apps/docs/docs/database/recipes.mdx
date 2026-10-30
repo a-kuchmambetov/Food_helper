@@ -9,16 +9,9 @@ RECIPES ||--o{ RECIPE_STEPS : has
 RECIPES ||--o{ RECIPE_CATEGORIES : belongs_to
 CATEGORIES ||--o{ RECIPE_CATEGORIES : classifies
 
-    USERS {
-        uuid id PK
-        varchar email UK
-        varchar username
-        timestamp created_at
-    }
-
     RECIPES {
         uuid id PK
-        uuid author_id FK
+        text user_id FK
         varchar title
         text description
         varchar image_url
@@ -59,7 +52,7 @@ CATEGORIES ||--o{ RECIPE_CATEGORIES : classifies
     }
 
     SAVED_RECIPES {
-        uuid user_id PK,FK
+        text user_id PK,FK
         uuid recipe_id PK,FK
         timestamp saved_at
     }
