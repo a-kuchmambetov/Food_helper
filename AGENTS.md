@@ -22,7 +22,7 @@ This is a pnpm monorepo. `apps/api/src` contains the TypeScript Fastify API, fea
 
 ## Coding Style & Naming Conventions
 
-Use TypeScript for new workspace code and ES modules throughout. Follow the root Oxfmt configuration in `.oxfmtrc.json`: four-space indentation, a 160-character print width, sorted imports, and normalized Tailwind classes. Run Oxlint (`pnpm lint`) for code changes; its rules are configured in `.oxlintrc.json`. Use `PascalCase` for React components and pages, `camelCase` for functions and variables, and descriptive lowercase feature directories. Keep API layers separated with names such as `inventory.routes.ts`, `inventory.controller.ts`, and `inventory.service.ts`.
+Use TypeScript for new workspace code and ES modules throughout. Follow the root Oxfmt configuration in `.oxfmtrc.json`: two-space indentation, a 80-character print width, sorted imports, and normalized Tailwind classes. Run Oxlint (`pnpm lint`) for code changes; its rules are configured in `.oxlintrc.json`. Use `PascalCase` for React components and pages, `camelCase` for functions and variables, and descriptive lowercase feature directories. Keep API layers separated with names such as `inventory.routes.ts`, `inventory.controller.ts`, and `inventory.service.ts`.
 
 ## Testing Guidelines
 
